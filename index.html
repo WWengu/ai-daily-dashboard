@@ -17,6 +17,7 @@
     --hero-bg: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.18);
     --radius: 12px;
     --radius-sm: 8px;
   }
@@ -31,10 +32,11 @@
     min-height: 100vh;
   }
 
+  /* ===== Hero ===== */
   .hero {
     background: var(--hero-bg);
     color: #fff;
-    padding: 48px 24px 40px;
+    padding: 44px 24px 36px;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -55,7 +57,7 @@
     background: rgba(255,255,255,0.04);
     bottom: -80px; left: -60px;
   }
-  .hero-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+  .hero-content { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
   .hero-badge {
     display: inline-block;
     background: rgba(255,255,255,0.18);
@@ -66,20 +68,88 @@
     font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.5px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
-  .hero h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
-  .hero .date-range { font-size: 14px; opacity: 0.8; margin-bottom: 24px; }
+  .hero h1 { font-size: 32px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+
+  .hero .date-range {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 18px;
+    opacity: 0.95;
+    line-height: 1.3;
+  }
+  .hero .date-range.loading-text { font-size: 18px; opacity: 0.9; }
+
+  /* Weather widget */
+  .weather {
+    background: rgba(255,255,255,0.14);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin: 0 auto 22px;
+    max-width: 680px;
+    text-align: left;
+  }
+  .weather-loading { font-size: 14px; opacity: 0.85; text-align: center; padding: 8px; }
+  .weather-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .weather-city {
+    font-size: 15px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .weather-city select {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+  }
+  .weather-city select option { color: #1a1a2e; background: #fff; }
+  .weather-update { font-size: 11px; opacity: 0.65; }
+  .weather-now {
+    display: flex; align-items: center; gap: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.18);
+  }
+  .weather-icon { font-size: 48px; line-height: 1; }
+  .weather-temp { font-size: 42px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+  .weather-desc { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+  .weather-meta { font-size: 12px; opacity: 0.75; line-height: 1.7; }
+  .weather-forecast {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding-top: 12px;
+  }
+  .weather-day {
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .weather-day-name { font-size: 12px; opacity: 0.85; margin-bottom: 4px; }
+  .weather-day-icon { font-size: 22px; margin: 4px 0; }
+  .weather-day-temp { font-size: 13px; font-weight: 600; }
+  .weather-day-rain { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+
   .hero .total { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
   .hero .total-label { font-size: 14px; opacity: 0.75; margin-top: 4px; }
-  .loading-text { font-size: 18px; opacity: 0.9; margin-top: 16px; }
 
   .stats-bar {
     display: flex;
     justify-content: center;
     gap: 24px;
     flex-wrap: wrap;
-    margin-top: 24px;
+    margin-top: 18px;
   }
   .stat-item {
     background: rgba(255,255,255,0.12);
@@ -92,6 +162,7 @@
   .stat-item .stat-num { font-size: 24px; font-weight: 700; line-height: 1.2; }
   .stat-item .stat-label { font-size: 12px; opacity: 0.75; margin-top: 2px; }
 
+  /* ===== Nav ===== */
   .nav {
     position: sticky;
     top: 0;
@@ -122,6 +193,7 @@
   .nav a:hover { color: var(--accent); }
   .nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
 
+  /* ===== Main ===== */
   .main { max-width: 1100px; margin: 0 auto; padding: 32px 20px 48px; }
 
   .section { margin-bottom: 48px; }
@@ -150,6 +222,7 @@
     border: 1px solid var(--border);
     transition: box-shadow 0.2s, transform 0.2s;
     position: relative;
+    cursor: pointer;
   }
   .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
   .card-num {
@@ -166,9 +239,8 @@
   .card-title {
     font-size: 15px; font-weight: 600; line-height: 1.5;
     margin-bottom: 8px; margin-top: 4px;
+    color: var(--text);
   }
-  .card-title a { color: inherit; text-decoration: none; }
-  .card-title a:hover { color: var(--accent); }
   .card-meta {
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 10px; flex-wrap: wrap;
@@ -180,14 +252,155 @@
     padding: 2px 10px; border-radius: 99px;
   }
   .card-time { font-size: 12px; color: var(--text-muted); }
-  .card-summary { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
-  .card-link {
-    display: inline-block; margin-top: 10px;
-    font-size: 12px; font-weight: 500;
-    color: var(--accent); text-decoration: none;
+  .card-summary {
+    font-size: 13px; color: var(--text-secondary); line-height: 1.65;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
-  .card-link:hover { text-decoration: underline; }
+  .card-tap-hint {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+  }
 
+  /* ===== Modal ===== */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 15, 30, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .modal-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal {
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.25s ease;
+  }
+  .modal-backdrop.show .modal { transform: translateY(0) scale(1); }
+
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-header-content { flex: 1; min-width: 0; }
+  .modal-num {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 99px;
+    margin-bottom: 8px;
+  }
+  .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .modal-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .modal-close {
+    background: #f1f3f8;
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: #e2e5ee; }
+
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-summary {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .modal-summary-empty {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .modal-source {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .modal-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .modal-cta:hover { background: #4f46e5; }
+  .modal-cta.disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* ===== Footer ===== */
   .footer {
     max-width: 1100px; margin: 0 auto;
     padding: 0 20px 40px; text-align: center;
@@ -208,9 +421,12 @@
   }
   .error-banner.show { display: block; }
 
+  /* ===== Responsive ===== */
   @media (max-width: 768px) {
-    .hero { padding: 36px 16px 32px; }
+    .hero { padding: 32px 16px 28px; }
     .hero h1 { font-size: 24px; }
+    .hero .date-range { font-size: 20px; }
+    .hero .date-range.loading-text { font-size: 16px; }
     .hero .total { font-size: 42px; }
     .stats-bar { gap: 10px; }
     .stat-item { padding: 10px 14px; min-width: 70px; }
@@ -218,28 +434,46 @@
     .cards { grid-template-columns: 1fr; }
     .main { padding: 24px 12px 36px; }
     .nav a { padding: 10px 14px; font-size: 13px; }
+    .weather-now { gap: 14px; }
+    .weather-icon { font-size: 40px; }
+    .weather-temp { font-size: 36px; }
+    .weather-forecast { grid-template-columns: repeat(3, 1fr); gap: 8px; }
   }
   @media (max-width: 480px) {
-    .hero { padding: 28px 12px 24px; }
+    .hero { padding: 24px 12px 22px; }
     .hero h1 { font-size: 22px; }
+    .hero .date-range { font-size: 18px; }
     .hero .total { font-size: 36px; }
     .stats-bar { gap: 6px; }
     .stat-item { padding: 8px 10px; min-width: 60px; }
     .card { padding: 16px; }
     .card-num { width: 24px; height: 24px; font-size: 11px; top: -8px; left: -8px; }
+    .weather { padding: 14px 16px; }
+    .weather-icon { font-size: 36px; }
+    .weather-temp { font-size: 32px; }
+    .weather-day { padding: 8px 4px; }
+    .modal-header, .modal-body, .modal-footer { padding-left: 18px; padding-right: 18px; }
+    .modal-title { font-size: 16px; }
   }
 
   html { scroll-behavior: smooth; scroll-padding-top: 56px; }
+  body.modal-open { overflow: hidden; }
 </style>
 </head>
 <body>
 
-<!-- Hero (dynamic) -->
+<!-- Hero -->
 <div class="hero">
-  <div class="hero-content" id="hero-content">
+  <div class="hero-content">
     <div class="hero-badge">AIHOT 每日精选</div>
     <h1>AI 日报</h1>
     <div class="date-range loading-text" id="hero-date">正在拉取数据...</div>
+
+    <!-- Weather widget -->
+    <div class="weather" id="weather">
+      <div class="weather-loading">正在加载天气...</div>
+    </div>
+
     <div class="total" id="hero-total">—</div>
     <div class="total-label">条精选资讯</div>
     <div class="stats-bar" id="hero-stats"></div>
@@ -249,12 +483,12 @@
 <!-- Error banner -->
 <div class="error-banner" id="error-banner"></div>
 
-<!-- Nav (dynamic) -->
+<!-- Nav -->
 <nav class="nav" id="nav">
   <div class="nav-inner" id="nav-inner"></div>
 </nav>
 
-<!-- Main content (dynamic) -->
+<!-- Main content -->
 <main class="main" id="main-content"></main>
 
 <!-- Footer -->
@@ -262,19 +496,89 @@
   <div class="footer-inner" id="footer-inner"></div>
 </footer>
 
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <div class="modal-header-content">
+        <span class="modal-num" id="modal-num">1</span>
+        <div class="modal-title" id="modal-title">标题</div>
+        <div class="modal-meta">
+          <span class="card-chip" id="modal-source">来源</span>
+          <span class="card-time" id="modal-time">时间</span>
+        </div>
+      </div>
+      <button class="modal-close" id="modal-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-summary" id="modal-summary"></div>
+    </div>
+    <div class="modal-footer">
+      <span class="modal-source" id="modal-source-detail"></span>
+      <a class="modal-cta" id="modal-cta" href="#" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {
 
 const API_BASE = 'https://aihot.virxact.com/api/v1';
 const UA = 'ai-daily-dashboard/1.0 (+https://aihot.virxact.com/aihot-skill/)';
 
-const SECTIONS = [
-  { id: 'models', label: '模型发布/更新', cat: 'ai-models' },
-  { id: 'products', label: '产品发布/更新', cat: 'ai-products' },
-  { id: 'industry', label: '行业动态', cat: 'industry' },
-  { id: 'papers', label: '论文研究', cat: 'paper', fallback: true },
-  { id: 'tips', label: '技巧与观点', cat: 'tip' },
-];
+// City presets for weather widget
+const CITIES = {
+  '广州黄埔': { lat: 23.13, lon: 113.45 },
+  '广州': { lat: 23.13, lon: 113.26 },
+  '北京': { lat: 39.90, lon: 116.41 },
+  '上海': { lat: 31.23, lon: 121.47 },
+  '深圳': { lat: 22.54, lon: 114.06 },
+  '杭州': { lat: 30.27, lon: 120.15 },
+  '成都': { lat: 30.57, lon: 104.07 },
+  '武汉': { lat: 30.59, lon: 114.31 },
+  '西安': { lat: 34.27, lon: 108.95 },
+  '长沙': { lat: 28.23, lon: 112.94 },
+  '苏州': { lat: 31.30, lon: 120.59 },
+  '南京': { lat: 32.06, lon: 118.80 },
+  '厦门': { lat: 24.48, lon: 118.09 },
+};
+const DEFAULT_CITY = '广州黄埔';
+const LS_KEY_CITY = 'ai-daily-city';
+
+// WMO weather code → emoji + Chinese
+function weatherInfo(code) {
+  const map = {
+    0: ['☀️', '晴'],
+    1: ['🌤️', '大致晴'],
+    2: ['⛅', '局部多云'],
+    3: ['☁️', '多云'],
+    45: ['🌫️', '雾'],
+    48: ['🌫️', '冰雾'],
+    51: ['🌦️', '小毛毛雨'],
+    53: ['🌦️', '毛毛雨'],
+    55: ['🌧️', '大毛毛雨'],
+    56: ['🌧️', '冻毛毛雨'],
+    57: ['🌧️', '大冻毛毛雨'],
+    61: ['🌧️', '小雨'],
+    63: ['🌧️', '中雨'],
+    65: ['🌧️', '大雨'],
+    66: ['🌧️', '冻雨'],
+    67: ['🌧️', '大冻雨'],
+    71: ['🌨️', '小雪'],
+    73: ['🌨️', '中雪'],
+    75: ['❄️', '大雪'],
+    77: ['❄️', '雪粒'],
+    80: ['🌦️', '小阵雨'],
+    81: ['🌦️', '中阵雨'],
+    82: ['⛈️', '大阵雨'],
+    85: ['🌨️', '小阵雪'],
+    86: ['❄️', '大阵雪'],
+    95: ['⛈️', '雷暴'],
+    96: ['⛈️', '雷雹（小）'],
+    99: ['⛈️', '雷雹（大）'],
+  };
+  return map[code] || ['🌡️', '未知'];
+}
 
 function fmtTime(iso) {
   if (!iso) return '';
@@ -297,38 +601,116 @@ function truncate(str, max) {
   return str.length > max ? str.slice(0, max).replace(/\s+$/,'') + '...' : str;
 }
 
-function cardHTML(item, num) {
-  const time = fmtTime(getTime(item));
-  const source = item.source ? item.source.name : '未知来源';
-  const summary = truncate(item.summary || '', 80);
-  return `<div class="card">
-    <div class="card-num">${num}</div>
-    <div class="card-title">
-      <a href="${item.links.aihot || item.links.original || '#'}" target="_blank" rel="noopener noreferrer">${item.title}</a>
-    </div>
-    <div class="card-meta">
-      <span class="card-chip">${source}</span>
-      <span class="card-time">${time}</span>
-    </div>
-    <p class="card-summary">${summary || '暂无摘要'}</p>
-    <a class="card-link" href="${item.links.original || item.links.aihot || '#'}" target="_blank" rel="noopener noreferrer">查看原文 →</a>
-  </div>`;
-}
-
 async function fetchJSON(url) {
   const resp = await fetch(url, { headers: { 'User-Agent': UA } });
   if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
   return resp.json();
 }
 
-// Fetch category items, with optional fallback for empty results
+// ===== Weather =====
+function getSavedCity() {
+  try {
+    const saved = localStorage.getItem(LS_KEY_CITY);
+    if (saved && CITIES[saved]) return saved;
+  } catch(e) {}
+  return DEFAULT_CITY;
+}
+
+function saveCity(city) {
+  try { localStorage.setItem(LS_KEY_CITY, city); } catch(e) {}
+}
+
+async function loadWeather() {
+  const weatherEl = document.getElementById('weather');
+  const city = getSavedCity();
+
+  // Render city selector first
+  let cityOptions = '';
+  for (const name of Object.keys(CITIES)) {
+    cityOptions += `<option value="${name}" ${name===city?'selected':''}>${name}</option>`;
+  }
+  weatherEl.innerHTML = `
+    <div class="weather-head">
+      <div class="weather-city">
+        <span>📍</span>
+        <select id="city-select">${cityOptions}</select>
+      </div>
+      <div class="weather-update" id="weather-update"></div>
+    </div>
+    <div id="weather-body"><div class="weather-loading">正在加载天气...</div></div>
+  `;
+  document.getElementById('city-select').addEventListener('change', (e) => {
+    saveCity(e.target.value);
+    loadWeather();
+  });
+
+  const { lat, lon } = CITIES[city];
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FShanghai&forecast_days=4`;
+  try {
+    const data = await fetchJSON(url);
+    const cur = data.current || {};
+    const daily = data.daily || {};
+    const [icon, desc] = weatherInfo(cur.weather_code);
+
+    const temp = Math.round(cur.temperature_2m);
+    const feels = Math.round(cur.apparent_temperature);
+    const humidity = cur.relative_humidity_2m;
+    const wind = Math.round(cur.wind_speed_10m);
+
+    let forecastHTML = '';
+    const days = ['今天','明天','后天'];
+    for (let i = 0; i < 3; i++) {
+      const [dayIcon, dayDesc] = weatherInfo(daily.weather_code[i]);
+      const tMax = Math.round(daily.temperature_2m_max[i]);
+      const tMin = Math.round(daily.temperature_2m_min[i]);
+      const rain = daily.precipitation_probability_max[i] || 0;
+      forecastHTML += `
+        <div class="weather-day">
+          <div class="weather-day-name">${days[i]}</div>
+          <div class="weather-day-icon">${dayIcon}</div>
+          <div class="weather-day-temp">${tMax}° / ${tMin}°</div>
+          <div class="weather-day-rain">💧 ${rain}%</div>
+        </div>
+      `;
+    }
+
+    document.getElementById('weather-body').innerHTML = `
+      <div class="weather-now">
+        <div class="weather-icon">${icon}</div>
+        <div style="flex:1;min-width:0">
+          <div class="weather-temp">${temp}°C</div>
+          <div class="weather-desc">${desc} · 体感 ${feels}°C</div>
+          <div class="weather-meta">
+            湿度 ${humidity}% · 风速 ${wind} km/h
+          </div>
+        </div>
+      </div>
+      <div class="weather-forecast">${forecastHTML}</div>
+    `;
+
+    const updTime = new Date(cur.time || new Date());
+    const updBJ = new Date(updTime.getTime() + 8 * 3600000);
+    document.getElementById('weather-update').textContent = `更新于 ${updBJ.getUTCMonth()+1}/${updBJ.getUTCDate()} ${String(updBJ.getUTCHours()).padStart(2,'0')}:${String(updBJ.getUTCMinutes()).padStart(2,'0')}`;
+  } catch (err) {
+    document.getElementById('weather-body').innerHTML = `<div class="weather-loading">天气加载失败：${err.message || '未知错误'}</div>`;
+  }
+}
+
+// ===== AI data fetching =====
+const SECTIONS = [
+  { id: 'models', label: '模型发布/更新', cat: 'ai-models' },
+  { id: 'products', label: '产品发布/更新', cat: 'ai-products' },
+  { id: 'industry', label: '行业动态', cat: 'industry' },
+  { id: 'papers', label: '论文研究', cat: 'paper', fallback: true },
+  { id: 'tips', label: '技巧与观点', cat: 'tip' },
+];
+
 async function fetchCategory(cat, fallbackMode) {
   let url = `${API_BASE}/items?mode=selected&window=24h&category=${cat}&limit=10`;
   let data = await fetchJSON(url);
   let items = data.items || [];
   let note = '';
 
-  // Fallback: if selected is empty and fallback enabled, try mode=all+7d
   if (items.length === 0 && fallbackMode) {
     url = `${API_BASE}/items?mode=all&window=7d&category=${cat}&limit=5`;
     data = await fetchJSON(url);
@@ -339,8 +721,68 @@ async function fetchCategory(cat, fallbackMode) {
   return { items, note };
 }
 
+function cardHTML(item, num) {
+  const time = fmtTime(getTime(item));
+  const source = item.source ? item.source.name : '未知来源';
+  const summary = truncate(item.summary || '', 110);
+  return `<div class="card" data-num="${num}">
+    <div class="card-num">${num}</div>
+    <div class="card-title">${item.title}</div>
+    <div class="card-meta">
+      <span class="card-chip">${source}</span>
+      <span class="card-time">${time}</span>
+    </div>
+    <p class="card-summary">${summary || '暂无摘要'}</p>
+    <span class="card-tap-hint">点击查看详情 →</span>
+  </div>`;
+}
+
+// ===== Modal =====
+let allItems = [];
+
+function openModal(item, num) {
+  const time = fmtTime(getTime(item));
+  const source = item.source ? item.source.name : '未知来源';
+  const summary = item.summary || '';
+  const url = item.links.original || item.links.aihot || '';
+
+  document.getElementById('modal-num').textContent = `序号 ${num}`;
+  document.getElementById('modal-title').textContent = item.title;
+  document.getElementById('modal-source').textContent = source;
+  document.getElementById('modal-time').textContent = time;
+  document.getElementById('modal-source-detail').textContent = `来源：${source}`;
+
+  if (summary) {
+    document.getElementById('modal-summary').className = 'modal-summary';
+    document.getElementById('modal-summary').textContent = summary;
+  } else {
+    document.getElementById('modal-summary').className = 'modal-summary-empty';
+    document.getElementById('modal-summary').textContent = '暂无摘要，请通过下方链接查看原文。';
+  }
+
+  const cta = document.getElementById('modal-cta');
+  if (url) {
+    cta.href = url;
+    cta.classList.remove('disabled');
+    cta.textContent = '查看原文 →';
+  } else {
+    cta.removeAttribute('href');
+    cta.classList.add('disabled');
+    cta.textContent = '暂无原文链接';
+  }
+
+  document.getElementById('modal-backdrop').classList.add('show');
+  document.body.classList.add('modal-open');
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('show');
+  document.body.classList.remove('modal-open');
+}
+
 function buildPage() {
   document.getElementById('hero-date').textContent = '正在拉取数据...';
+  document.getElementById('hero-date').classList.add('loading-text');
   document.getElementById('hero-total').textContent = '—';
   document.getElementById('hero-stats').innerHTML = '';
   document.getElementById('nav-inner').innerHTML = '';
@@ -352,13 +794,11 @@ function buildPage() {
 async function load() {
   buildPage();
 
-  // Fetch daily info and all categories in parallel
   const dailyPromise = fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null);
   const catPromises = SECTIONS.map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
 
   const [daily, ...catResults] = await Promise.all([dailyPromise, ...catPromises]);
 
-  // Determine date
   let dateStr = '';
   let windowStr = '';
   let dailyUrl = 'https://aihot.virxact.com/daily';
@@ -380,10 +820,9 @@ async function load() {
     dailyUrl = `https://aihot.virxact.com/daily/${dateStr}`;
   }
 
-  // Collect all items with section info, global numbering
   let globalNum = 0;
   const sectionData = [];
-  const errors = [];
+  allItems = [];
 
   for (let i = 0; i < SECTIONS.length; i++) {
     const sec = SECTIONS[i];
@@ -393,6 +832,7 @@ async function load() {
 
     const cards = items.map(item => {
       globalNum++;
+      allItems.push({ item, num: globalNum });
       return { html: cardHTML(item, globalNum), item };
     });
 
@@ -405,11 +845,8 @@ async function load() {
     });
   }
 
-  // Compute title date
-  const titleDate = dateStr;
-  document.title = `AI 日报 — ${titleDate}`;
+  document.title = `AI 日报 — ${dateStr}`;
 
-  // === Render Hero ===
   document.getElementById('hero-date').textContent = windowStr || '数据加载中...';
   document.getElementById('hero-date').classList.remove('loading-text');
   document.getElementById('hero-total').textContent = globalNum;
@@ -420,14 +857,12 @@ async function load() {
   }
   document.getElementById('hero-stats').innerHTML = statsHTML;
 
-  // === Render Nav ===
   let navHTML = '';
   for (const sd of sectionData) {
     navHTML += `<a href="#section-${sd.id}">${sd.label}</a>`;
   }
   document.getElementById('nav-inner').innerHTML = navHTML;
 
-  // === Render Main ===
   let mainHTML = '';
   for (const sd of sectionData) {
     let labelExtra = sd.note ? ` <span style="font-size:12px;color:#c98b2e;">${sd.note}</span>` : '';
@@ -445,22 +880,21 @@ async function load() {
   }
   document.getElementById('main-content').innerHTML = mainHTML;
 
-  // === Render Footer ===
+  document.querySelectorAll('.card').forEach(el => {
+    el.addEventListener('click', () => {
+      const num = parseInt(el.dataset.num, 10);
+      const found = allItems.find(x => x.num === num);
+      if (found) openModal(found.item, found.num);
+    });
+  });
+
   const genTime = fmtTime(new Date().toISOString());
   document.getElementById('footer-inner').innerHTML = `
-    <p>共 <strong>${globalNum}</strong> 条精选资讯 · 数据来源：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报 (${titleDate})</a></p>
-    <p style="margin-top:6px;font-size:12px">AIHOT v1 API · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
+    <p>共 <strong>${globalNum}</strong> 条精选资讯 · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报 (${dateStr})</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+    <p style="margin-top:6px;font-size:12px">AIHOT v1 API + Open-Meteo · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
   `;
 
-  // === Scroll spy ===
   initScrollSpy();
-
-  // === Show errors if any ===
-  if (errors.length > 0) {
-    const banner = document.getElementById('error-banner');
-    banner.textContent = '部分数据加载失败：' + errors.join('；');
-    banner.classList.add('show');
-  }
 }
 
 function initScrollSpy() {
@@ -488,7 +922,14 @@ function initScrollSpy() {
   onScroll();
 }
 
-// Error handling wrapper
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
 function handleError(err) {
   const banner = document.getElementById('error-banner');
   banner.textContent = '数据加载失败：' + (err.message || '未知错误') + '。请检查网络后刷新页面重试。';
@@ -497,6 +938,7 @@ function handleError(err) {
   document.getElementById('hero-date').classList.remove('loading-text');
 }
 
+loadWeather();
 load().catch(handleError);
 
 })();
