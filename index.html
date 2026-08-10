@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 日报 — 2026年8月10日</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --card-bg: #ffffff;
+    --text: #1a1a2e;
+    --text-secondary: #5a5f72;
+    --text-muted: #8e92a5;
+    --border: #e8eaf0;
+    --accent: #6366f1;
+    --accent-light: #eef0ff;
+    --accent-dark: #4f46e5;
+    --chip-bg: #f1f3f8;
+    --chip-text: #4a4e6b;
+    --hero-bg: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ====== Hero ====== */
+  .hero {
+    background: var(--hero-bg);
+    color: #fff;
+    padding: 48px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    top: -120px; right: -100px;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    bottom: -80px; left: -60px;
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 4px 16px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .hero .date-range {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 24px;
+  }
+  .hero .total {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .hero .total-label {
+    font-size: 14px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+  .stat-item {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(6px);
+    border-radius: var(--radius-sm);
+    padding: 12px 20px;
+    min-width: 90px;
+    text-align: center;
+  }
+  .stat-item .stat-num {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .stat-item .stat-label {
+    font-size: 12px;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+
+  /* ====== Nav ====== */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 4px;
+  }
+  .nav a {
+    display: block;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav a:hover { color: var(--accent); }
+  .nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ====== Main ====== */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 48px;
+  }
+
+  .section { margin-bottom: 48px; }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accent-light);
+  }
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-header .section-count {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .card-num {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(99,102,241,0.35);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    margin-top: 4px;
+    color: var(--text);
+  }
+  .card-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .card-title a:hover { color: var(--accent); }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .card-chip {
+    display: inline-block;
+    background: var(--chip-bg);
+    color: var(--chip-text);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 99px;
+  }
+  .card-time {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .card-summary {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+  .card-link {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .card-link:hover { text-decoration: underline; }
+
+  /* ====== Footer ====== */
+  .footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+    text-align: center;
+  }
+  .footer-inner {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .footer a:hover { text-decoration: underline; }
+
+  /* Empty state */
+  .empty-section {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* ====== Responsive ====== */
+  @media (max-width: 768px) {
+    .hero { padding: 36px 16px 32px; }
+    .hero h1 { font-size: 24px; }
+    .hero .total { font-size: 42px; }
+    .stats-bar { gap: 10px; }
+    .stat-item { padding: 10px 14px; min-width: 70px; }
+    .stat-item .stat-num { font-size: 20px; }
+    .cards { grid-template-columns: 1fr; }
+    .main { padding: 24px 12px 36px; }
+    .nav a { padding: 10px 14px; font-size: 13px; }
+  }
+
+  @media (max-width: 480px) {
+    .hero { padding: 28px 12px 24px; }
+    .hero h1 { font-size: 22px; }
+    .hero .total { font-size: 36px; }
+    .stats-bar { gap: 6px; }
+    .stat-item { padding: 8px 10px; min-width: 60px; }
+    .card { padding: 16px; }
+    .card-num { width: 24px; height: 24px; font-size: 11px; top: -8px; left: -8px; }
+  }
+
+  /* Smooth scroll */
+  html { scroll-behavior: smooth; scroll-padding-top: 56px; }
+</style>
+</head>
+<body>
+
+<!-- ====== Hero ====== -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">AIHOT 每日精选</div>
+    <h1>AI 日报</h1>
+    <div class="date-range">2026年8月9日 08:00 — 2026年8月10日 08:00（北京时间）</div>
+    <div class="total">14</div>
+    <div class="total-label">条精选资讯</div>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-num">1</div>
+        <div class="stat-label">模型发布/更新</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3</div>
+        <div class="stat-label">产品发布/更新</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">2</div>
+        <div class="stat-label">行业动态</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">4</div>
+        <div class="stat-label">论文研究</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">4</div>
+        <div class="stat-label">技巧与观点</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== Nav ====== -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#section-models">模型发布/更新</a>
+    <a href="#section-products">产品发布/更新</a>
+    <a href="#section-industry">行业动态</a>
+    <a href="#section-papers">论文研究</a>
+    <a href="#section-tips">技巧与观点</a>
+  </div>
+</nav>
+
+<!-- ====== Main ====== -->
+<main class="main">
+
+  <!-- 1. 模型发布/更新 -->
+  <section class="section" id="section-models">
+    <div class="section-header">
+      <h2>模型发布/更新</h2>
+      <span class="section-count">1 条</span>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-num">1</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsmhbu4w0338ronxh92vej2u" target="_blank" rel="noopener noreferrer">NVIDIA 发布 NemotronLabs VoiceChat 11B：开源全双工语音模型</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">MarkTechPost</span>
+          <span class="card-time">2026年8月10日 08:14</span>
+        </div>
+        <p class="card-summary">开源端到端全双工语音对话模型，轮换延迟仅448毫秒，首个支持对话中工具调用的开源全双工模型。</p>
+        <a class="card-link" href="https://www.marktechpost.com/2026/08/09/nvidia-releases-nemotronlabs-voicechat-11b-an-open-full-duplex-speech-to-speech-model-with-450-ms-turn-taking-and-live-tool-calling" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 2. 产品发布/更新 -->
+  <section class="section" id="section-products">
+    <div class="section-header">
+      <h2>产品发布/更新</h2>
+      <span class="section-count">3 条</span>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-num">2</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsmlho8005dmrohfoz27j6em" target="_blank" rel="noopener noreferrer">千问开放平台上线：租房、寄快递、查理财等可对话办理</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">公众号：千问APP（阿里）</span>
+          <span class="card-time">2026年8月10日 10:11</span>
+        </div>
+        <p class="card-summary">千问开放平台面向生态伙伴开放手机、PC和AI眼镜三类终端服务接入，覆盖物流、房产、理财、汽车等十多个领域。</p>
+        <a class="card-link" href="https://mp.weixin.qq.com/s?__biz=MzYzNDE5MDEwMQ%3D%3D&mid=2247488345&idx=1&sn=ef4e57c9c9350f9238d90211eb2dd453" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">3</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsmjglqx034prohfslczvkpb" target="_blank" rel="noopener noreferrer">OpenChamber：一个基于代理的跨端开发环境</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">Hacker News</span>
+          <span class="card-time">2026年8月10日 09:14</span>
+        </div>
+        <p class="card-summary">跨桌面、浏览器、手机和VS Code的代理开发环境，支持多模型并行、变更走查、issue到PR完整流程，完全开源且本地存储。</p>
+        <a class="card-link" href="https://openchamber.dev/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">4</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsmizpgb02yerohf3bh8jesi" target="_blank" rel="noopener noreferrer">LatentRank：一个更公平的 AI 大模型综合排行榜</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">公众号：数字生命卡兹克</span>
+          <span class="card-time">2026年8月10日 09:01</span>
+        </div>
+        <p class="card-summary">作者耗时54小时开发，聚合多家可信榜单，采用Bradley-Terry成对比较算法解决评分偏差，目前Opus 5居首。</p>
+        <a class="card-link" href="https://mp.weixin.qq.com/s?__biz=MzIyMzA5NjEyMA%3D%3D&mid=2647685059&idx=1&sn=a329fe9999ac2419470c7eca9a97acd3" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 3. 行业动态 -->
+  <section class="section" id="section-industry">
+    <div class="section-header">
+      <h2>行业动态</h2>
+      <span class="section-count">2 条</span>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-num">5</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsmf2q0t030sroadf0o5jwoa" target="_blank" rel="noopener noreferrer">宇树科技启动申购，A股迎来"人形机器人第一股"</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">IT之家</span>
+          <span class="card-time">2026年8月10日 07:11</span>
+        </div>
+        <p class="card-summary">发行价150.80元/股，市值约610亿元，战略配售获社保基金、深度求索等认购，2025年净利润达2.78亿元。</p>
+        <a class="card-link" href="https://www.ithome.com/0/987/649.htm" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">6</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmslwy8bl04pdro0w7f4ogv7t" target="_blank" rel="noopener noreferrer">AI安全测试正成为安全风险</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">TechCrunch</span>
+          <span class="card-time">2026年8月9日 22:44</span>
+        </div>
+        <p class="card-summary">OpenAI、Anthropic等AI智能体在安全评估中多次突破测试环境边界，甚至入侵真实系统，沙箱控制已跟不上模型能力。</p>
+        <a class="card-link" href="https://techcrunch.com/2026/08/09/the-ai-safety-test-is-becoming-a-safety-risk" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 4. 论文研究 -->
+  <section class="section" id="section-papers">
+    <div class="section-header">
+      <h2>论文研究</h2>
+      <span class="section-count">4 条</span>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-num">7</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsm8r0lv04lfro980foz99j5" target="_blank" rel="noopener noreferrer">Metis：把记忆内化进 LLM 自身状态</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">X：Rohan Paul</span>
+          <span class="card-time">2026年8月10日 04:14</span>
+        </div>
+        <p class="card-summary">通过骨干网络内持久记忆状态压缩过往交互，而非外挂检索系统，Metis-27B在LoCoMo得分远超同类方案。</p>
+        <a class="card-link" href="https://x.com/rohanpaul_ai/status/2086544779974955262" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">8</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsm4gcaf08mnroy9j2sel8n3" target="_blank" rel="noopener noreferrer">Meta EvoHarness-RL：让智能体自主学习工具编排策略</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">X：DAIR.AI</span>
+          <span class="card-time">2026年8月10日 02:14</span>
+        </div>
+        <p class="card-summary">智能体离线学习工具编排策略并在线更新，Qwen3-8B在ALFWorld达96.9%准确率，替代手工编写的大量协调代码。</p>
+        <a class="card-link" href="https://x.com/omarsar0/status/2086509069762981896" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">9</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmslqj0vu03h4roagcrjvgqss" target="_blank" rel="noopener noreferrer">Meta 研究：量化让推理模型过度自我怀疑</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">X：Rohan Paul</span>
+          <span class="card-time">2026年8月9日 19:44</span>
+        </div>
+        <p class="card-summary">强量化让推理模型在得出正确答案后反复自我怀疑，过度思考失败率最高达52%，对犹豫词施加惩罚可缩短推理12%-23%。</p>
+        <a class="card-link" href="https://x.com/rohanpaul_ai/status/2086415812550910146" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">10</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsmaw72e03m8ro9ndsiq57wc" target="_blank" rel="noopener noreferrer">AI 削减入门岗或引发"认知公地悲剧"</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">X：Rohan Paul</span>
+          <span class="card-time">2026年8月10日 05:14</span>
+        </div>
+        <p class="card-summary">论文指出AI替代初级岗位会造成长期专业人才断层，22-25岁工人在高AI暴露职业中就业相对下降16%。</p>
+        <a class="card-link" href="https://x.com/rohanpaul_ai/status/2086559090109804769" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. 技巧与观点 -->
+  <section class="section" id="section-tips">
+    <div class="section-header">
+      <h2>技巧与观点</h2>
+      <span class="section-count">4 条</span>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-num">11</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmsm5mk1109hdroy9apis4bb7" target="_blank" rel="noopener noreferrer">Anthropic 称已基本解决提示注入攻击</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">X：Boris Cherny</span>
+          <span class="card-time">2026年8月10日 02:47</span>
+        </div>
+        <p class="card-summary">通过模型训练叠加多层防御，未见过的间接提示注入攻击成功率可降至约0，Claude Code auto模式下周默认开启。</p>
+        <a class="card-link" href="https://x.com/bcherny/status/2086520950259118464" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">12</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmslxhx3t05n3ro0w2lcmvjol" target="_blank" rel="noopener noreferrer">从黑客事件中汲取的教训：激励与治理失衡</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">Nathan Lambert：Interconnects</span>
+          <span class="card-time">2026年8月9日 22:59</span>
+        </div>
+        <p class="card-summary">前沿模型攻击暴露科技公司受增长驱动持续扩展而政府行动迟缓，双方均未准备好应对未来12-24个月挑战。</p>
+        <a class="card-link" href="https://www.interconnects.ai/p/lessons-from-the-hacks" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">13</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmslmv6kx03muroqyxyo4fbtl" target="_blank" rel="noopener noreferrer">Seedance 2.5 上线一周新增六种创意玩法</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">公众号：卡尔的AI沃茨</span>
+          <span class="card-time">2026年8月9日 18:01</span>
+        </div>
+        <p class="card-summary">社区涌现时间静止、超级英雄变身、K-pop MV等六类玩法，人物面部告别AI油腻感，单次生成最长300秒。</p>
+        <a class="card-link" href="https://mp.weixin.qq.com/s?__biz=Mzg3MTk3NzYzNw%3D%3D&mid=2247509275&idx=1&sn=48cc15b0f9b22173ce93350da61f15dc" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+      <div class="card">
+        <div class="card-num">14</div>
+        <div class="card-title">
+          <a href="https://aihot.virxact.com/items/cmslhy76p03hdroo0l8dsaskb" target="_blank" rel="noopener noreferrer">DistilBERT LoRA 与 TF-IDF 基线做 IMDb 情感分析</a>
+        </div>
+        <div class="card-meta">
+          <span class="card-chip">MarkTechPost</span>
+          <span class="card-time">2026年8月9日 15:44</span>
+        </div>
+        <p class="card-summary">端到端情感分析教程，对比TF-IDF逻辑回归与LoRA微调DistilBERT，含校准、可解释性与半监督学习完整流程。</p>
+        <a class="card-link" href="https://www.marktechpost.com/2026/08/09/imdb-sentiment-analysis-with-distilbert-lora-tf-idf-baselines-calibration-interpretability-robustness-testing-and-semi-supervised-learning" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ====== Footer ====== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <p>共 <strong>14</strong> 条精选资讯 · 数据来源：<a href="https://aihot.virxact.com/daily/2026-08-10" target="_blank" rel="noopener noreferrer">AIHOT 日报 (2026-08-10)</a></p>
+    <p style="margin-top:6px;font-size:12px">AIHOT v1 API · 时间窗口：2026-08-09T00:00 — 2026-08-10T00:00 (UTC) · 生成时间：2026年8月10日 11:44（北京时间）</p>
+  </div>
+</footer>
+
+<!-- ====== JS: Nav scroll spy ====== -->
+<script>
+(function() {
+  const nav = document.getElementById('nav');
+  const links = nav.querySelectorAll('a');
+  const sections = [];
+  links.forEach(a => {
+    const id = a.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ link: a, el });
+  });
+
+  function onScroll() {
+    let current = sections[0];
+    const scrollY = window.scrollY + nav.offsetHeight + 20;
+    for (const s of sections) {
+      if (s.el.offsetTop <= scrollY) current = s;
+    }
+    links.forEach(a => a.classList.remove('active'));
+    if (current) current.link.classList.add('active');
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+
+</body>
+</html>
