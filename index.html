@@ -117,29 +117,11 @@
   .weather-update { font-size: 11px; opacity: 0.65; }
   .weather-now {
     display: flex; align-items: center; gap: 18px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.18);
   }
   .weather-icon { font-size: 48px; line-height: 1; }
   .weather-temp { font-size: 42px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
   .weather-desc { font-size: 14px; opacity: 0.85; margin-top: 4px; }
   .weather-meta { font-size: 12px; opacity: 0.75; line-height: 1.7; }
-  .weather-forecast {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    padding-top: 12px;
-  }
-  .weather-day {
-    background: rgba(255,255,255,0.08);
-    border-radius: 10px;
-    padding: 10px 8px;
-    text-align: center;
-  }
-  .weather-day-name { font-size: 12px; opacity: 0.85; margin-bottom: 4px; }
-  .weather-day-icon { font-size: 22px; margin: 4px 0; }
-  .weather-day-temp { font-size: 13px; font-weight: 600; }
-  .weather-day-rain { font-size: 11px; opacity: 0.7; margin-top: 2px; }
 
   .hero .total { font-size: 56px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
   .hero .total-label { font-size: 14px; opacity: 0.75; margin-top: 4px; }
@@ -437,7 +419,6 @@
     .weather-now { gap: 14px; }
     .weather-icon { font-size: 40px; }
     .weather-temp { font-size: 36px; }
-    .weather-forecast { grid-template-columns: repeat(3, 1fr); gap: 8px; }
   }
   @media (max-width: 480px) {
     .hero { padding: 24px 12px 22px; }
@@ -645,34 +626,15 @@ async function loadWeather() {
   });
 
   const { lat, lon } = CITIES[city];
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FShanghai&forecast_days=4`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&forecast_days=1`;
   try {
     const data = await fetchJSON(url);
     const cur = data.current || {};
-    const daily = data.daily || {};
     const [icon, desc] = weatherInfo(cur.weather_code);
-
     const temp = Math.round(cur.temperature_2m);
     const feels = Math.round(cur.apparent_temperature);
     const humidity = cur.relative_humidity_2m;
     const wind = Math.round(cur.wind_speed_10m);
-
-    let forecastHTML = '';
-    const days = ['今天','明天','后天'];
-    for (let i = 0; i < 3; i++) {
-      const [dayIcon, dayDesc] = weatherInfo(daily.weather_code[i]);
-      const tMax = Math.round(daily.temperature_2m_max[i]);
-      const tMin = Math.round(daily.temperature_2m_min[i]);
-      const rain = daily.precipitation_probability_max[i] || 0;
-      forecastHTML += `
-        <div class="weather-day">
-          <div class="weather-day-name">${days[i]}</div>
-          <div class="weather-day-icon">${dayIcon}</div>
-          <div class="weather-day-temp">${tMax}° / ${tMin}°</div>
-          <div class="weather-day-rain">💧 ${rain}%</div>
-        </div>
-      `;
-    }
 
     document.getElementById('weather-body').innerHTML = `
       <div class="weather-now">
@@ -685,7 +647,6 @@ async function loadWeather() {
           </div>
         </div>
       </div>
-      <div class="weather-forecast">${forecastHTML}</div>
     `;
 
     const updTime = new Date(cur.time || new Date());
