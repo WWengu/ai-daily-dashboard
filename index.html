@@ -22,6 +22,21 @@
     --radius-sm: 8px;
   }
 
+  /* ===== Dark theme ===== */
+  [data-theme="dark"] {
+    --bg: #0f1117;
+    --card-bg: #1a1d27;
+    --text: #e6e8ef;
+    --text-secondary: #a8adbf;
+    --text-muted: #6b7080;
+    --border: #2a2e3a;
+    --accent: #818cf8;
+    --accent-light: #2a2e4a;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
@@ -30,6 +45,7 @@
     color: var(--text);
     line-height: 1.6;
     min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
   }
 
   /* ===== Hero ===== */
@@ -81,6 +97,24 @@
     line-height: 1.3;
   }
   .hero .date-range.loading-text { font-size: 18px; opacity: 0.9; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.15s;
+    z-index: 2;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.08); }
 
   /* Weather widget */
   .weather {
@@ -144,7 +178,7 @@
   .stat-item .stat-num { font-size: 24px; font-weight: 700; line-height: 1.2; }
   .stat-item .stat-label { font-size: 12px; opacity: 0.75; margin-top: 2px; }
 
-  /* ===== Nav ===== */
+  /* ===== Nav + Toolbar ===== */
   .nav {
     position: sticky;
     top: 0;
@@ -152,14 +186,15 @@
     background: rgba(255,255,255,0.85);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    padding: 0 20px;
-    overflow-x: auto;
   }
+  [data-theme="dark"] .nav { background: rgba(15,17,23,0.85); }
   .nav-inner {
     max-width: 1100px;
     margin: 0 auto;
     display: flex;
     gap: 4px;
+    padding: 0 20px;
+    overflow-x: auto;
   }
   .nav a {
     display: block;
@@ -174,6 +209,49 @@
   }
   .nav a:hover { color: var(--accent); }
   .nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .toolbar {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .search-input {
+    flex: 1;
+    min-width: 180px;
+    max-width: 360px;
+    padding: 8px 14px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-chip {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 5px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .toolbar-count { font-size: 12px; color: var(--text-muted); margin-left: auto; }
 
   /* ===== Main ===== */
   .main { max-width: 1100px; margin: 0 auto; padding: 32px 20px 48px; }
@@ -202,11 +280,15 @@
     padding: 20px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border);
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition: box-shadow 0.2s, transform 0.2s, opacity 0.2s;
     position: relative;
     cursor: pointer;
   }
   .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .card.read { opacity: 0.5; }
+  .card.read:hover { opacity: 0.75; }
+  .card.read .card-title { color: var(--text-muted); }
+  .card.fav { border-color: #fbbf24; }
   .card-num {
     position: absolute;
     top: -10px; left: -10px;
@@ -218,10 +300,26 @@
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 2px 6px rgba(99,102,241,0.35);
   }
+  .card-fav {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    z-index: 2;
+    transition: transform 0.15s, color 0.15s;
+  }
+  .card-fav:hover { transform: scale(1.2); }
+  .card-fav.on { color: #fbbf24; }
   .card-title {
     font-size: 15px; font-weight: 600; line-height: 1.5;
     margin-bottom: 8px; margin-top: 4px;
     color: var(--text);
+    padding-right: 24px;
   }
   .card-meta {
     display: flex; align-items: center; gap: 10px;
@@ -233,6 +331,7 @@
     font-size: 12px; font-weight: 500;
     padding: 2px 10px; border-radius: 99px;
   }
+  [data-theme="dark"] .card-chip { background: #2a2e3a; color: #a8adbf; }
   .card-time { font-size: 12px; color: var(--text-muted); }
   .card-summary {
     font-size: 13px; color: var(--text-secondary); line-height: 1.65;
@@ -247,6 +346,16 @@
     font-size: 12px;
     color: var(--accent);
     font-weight: 500;
+  }
+
+  .empty-section {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    border: 1px dashed var(--border);
   }
 
   /* ===== Modal ===== */
@@ -329,7 +438,9 @@
     flex-shrink: 0;
     transition: background 0.15s;
   }
+  [data-theme="dark"] .modal-close { background: #2a2e3a; }
   .modal-close:hover { background: #e2e5ee; }
+  [data-theme="dark"] .modal-close:hover { background: #34394a; }
 
   .modal-body {
     padding: 20px 24px;
@@ -376,6 +487,7 @@
     transition: background 0.15s;
   }
   .modal-cta:hover { background: #4f46e5; }
+  [data-theme="dark"] .modal-cta:hover { background: #6366f1; }
   .modal-cta.disabled {
     background: #d1d5db;
     cursor: not-allowed;
@@ -419,6 +531,8 @@
     .weather-now { gap: 14px; }
     .weather-icon { font-size: 40px; }
     .weather-temp { font-size: 36px; }
+    .toolbar { padding: 8px 14px; }
+    .search-input { max-width: none; }
   }
   @media (max-width: 480px) {
     .hero { padding: 24px 12px 22px; }
@@ -432,12 +546,11 @@
     .weather { padding: 14px 16px; }
     .weather-icon { font-size: 36px; }
     .weather-temp { font-size: 32px; }
-    .weather-day { padding: 8px 4px; }
     .modal-header, .modal-body, .modal-footer { padding-left: 18px; padding-right: 18px; }
     .modal-title { font-size: 16px; }
   }
 
-  html { scroll-behavior: smooth; scroll-padding-top: 56px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 100px; }
   body.modal-open { overflow: hidden; }
 </style>
 </head>
@@ -445,6 +558,7 @@
 
 <!-- Hero -->
 <div class="hero">
+  <button class="theme-toggle" id="theme-toggle" aria-label="切换深色模式" title="切换深色/浅色">🌙</button>
   <div class="hero-content">
     <div class="hero-badge">AIHOT 每日精选</div>
     <h1>AI 日报</h1>
@@ -464,9 +578,19 @@
 <!-- Error banner -->
 <div class="error-banner" id="error-banner"></div>
 
-<!-- Nav -->
+<!-- Nav + Toolbar -->
 <nav class="nav" id="nav">
   <div class="nav-inner" id="nav-inner"></div>
+  <div class="toolbar">
+    <input type="search" id="search-input" class="search-input" placeholder="搜索标题 / 摘要 / 来源...">
+    <div class="filter-chips" id="filter-chips">
+      <button class="filter-chip active" data-filter="all">全部</button>
+      <button class="filter-chip" data-filter="favorites">★ 收藏</button>
+      <button class="filter-chip" data-filter="unread">● 未读</button>
+      <button class="filter-chip" id="mark-all-read">全部标为已读</button>
+    </div>
+    <div class="toolbar-count" id="toolbar-count"></div>
+  </div>
 </nav>
 
 <!-- Main content -->
@@ -507,7 +631,22 @@
 const API_BASE = 'https://aihot.virxact.com/api/v1';
 const UA = 'ai-daily-dashboard/1.0 (+https://aihot.virxact.com/aihot-skill/)';
 
-// City presets for weather widget
+// ===== LocalStorage state =====
+const LS = {
+  get(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+};
+const LS_THEME = 'ai-daily-theme';
+const LS_FAV = 'ai-daily-fav';
+const LS_READ = 'ai-daily-read';
+
+let theme = LS.get(LS_THEME, 'light');
+let favorites = new Set(LS.get(LS_FAV, []));
+let read = new Set(LS.get(LS_READ, []));
+let searchQuery = '';
+let filter = 'all'; // all | favorites | unread
+
+// ===== City presets =====
 const CITIES = {
   '广州黄埔': { lat: 23.13, lon: 113.45 },
   '广州': { lat: 23.13, lon: 113.26 },
@@ -526,37 +665,44 @@ const CITIES = {
 const DEFAULT_CITY = '广州黄埔';
 const LS_KEY_CITY = 'ai-daily-city';
 
-// WMO weather code → emoji + Chinese
+// ===== Helpers =====
+function itemKey(item) {
+  const links = item.links || {};
+  return links.aihot || links.original || (item.title + '|' + (item.source ? item.source.name : ''));
+}
+function isFav(k) { return favorites.has(k); }
+function isRead(k) { return read.has(k); }
+function toggleFav(k) {
+  if (favorites.has(k)) favorites.delete(k); else favorites.add(k);
+  LS.set(LS_FAV, [...favorites]);
+}
+function markRead(k) {
+  if (!read.has(k)) { read.add(k); LS.set(LS_READ, [...read]); }
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  theme = theme === 'light' ? 'dark' : 'light';
+  LS.set(LS_THEME, theme);
+  applyTheme();
+}
+
 function weatherInfo(code) {
   const map = {
-    0: ['☀️', '晴'],
-    1: ['🌤️', '大致晴'],
-    2: ['⛅', '局部多云'],
-    3: ['☁️', '多云'],
-    45: ['🌫️', '雾'],
-    48: ['🌫️', '冰雾'],
-    51: ['🌦️', '小毛毛雨'],
-    53: ['🌦️', '毛毛雨'],
-    55: ['🌧️', '大毛毛雨'],
-    56: ['🌧️', '冻毛毛雨'],
-    57: ['🌧️', '大冻毛毛雨'],
-    61: ['🌧️', '小雨'],
-    63: ['🌧️', '中雨'],
-    65: ['🌧️', '大雨'],
-    66: ['🌧️', '冻雨'],
-    67: ['🌧️', '大冻雨'],
-    71: ['🌨️', '小雪'],
-    73: ['🌨️', '中雪'],
-    75: ['❄️', '大雪'],
-    77: ['❄️', '雪粒'],
-    80: ['🌦️', '小阵雨'],
-    81: ['🌦️', '中阵雨'],
-    82: ['⛈️', '大阵雨'],
-    85: ['🌨️', '小阵雪'],
-    86: ['❄️', '大阵雪'],
-    95: ['⛈️', '雷暴'],
-    96: ['⛈️', '雷雹（小）'],
-    99: ['⛈️', '雷雹（大）'],
+    0: ['☀️', '晴'], 1: ['🌤️', '大致晴'], 2: ['⛅', '局部多云'], 3: ['☁️', '多云'],
+    45: ['🌫️', '雾'], 48: ['🌫️', '冰雾'],
+    51: ['🌦️', '小毛毛雨'], 53: ['🌦️', '毛毛雨'], 55: ['🌧️', '大毛毛雨'],
+    56: ['🌧️', '冻毛毛雨'], 57: ['🌧️', '大冻毛毛雨'],
+    61: ['🌧️', '小雨'], 63: ['🌧️', '中雨'], 65: ['🌧️', '大雨'],
+    66: ['🌧️', '冻雨'], 67: ['🌧️', '大冻雨'],
+    71: ['🌨️', '小雪'], 73: ['🌨️', '中雪'], 75: ['❄️', '大雪'], 77: ['❄️', '雪粒'],
+    80: ['🌦️', '小阵雨'], 81: ['🌦️', '中阵雨'], 82: ['⛈️', '大阵雨'],
+    85: ['🌨️', '小阵雪'], 86: ['❄️', '大阵雪'],
+    95: ['⛈️', '雷暴'], 96: ['⛈️', '雷雹（小）'], 99: ['⛈️', '雷雹（大）'],
   };
   return map[code] || ['🌡️', '未知'];
 }
@@ -573,9 +719,7 @@ function fmtTime(iso) {
   return `${y}年${m}月${day}日 ${h}:${min}`;
 }
 
-function getTime(entry) {
-  return entry.publishedAt || entry.discoveredAt;
-}
+function getTime(entry) { return entry.publishedAt || entry.discoveredAt; }
 
 function truncate(str, max) {
   if (!str) return '';
@@ -590,39 +734,27 @@ async function fetchJSON(url) {
 
 // ===== Weather =====
 function getSavedCity() {
-  try {
-    const saved = localStorage.getItem(LS_KEY_CITY);
-    if (saved && CITIES[saved]) return saved;
-  } catch(e) {}
+  try { const s = localStorage.getItem(LS_KEY_CITY); if (s && CITIES[s]) return s; } catch(e) {}
   return DEFAULT_CITY;
 }
-
-function saveCity(city) {
-  try { localStorage.setItem(LS_KEY_CITY, city); } catch(e) {}
-}
+function saveCity(city) { try { localStorage.setItem(LS_KEY_CITY, city); } catch(e) {} }
 
 async function loadWeather() {
   const weatherEl = document.getElementById('weather');
   const city = getSavedCity();
-
-  // Render city selector first
-  let cityOptions = '';
+  let opts = '';
   for (const name of Object.keys(CITIES)) {
-    cityOptions += `<option value="${name}" ${name===city?'selected':''}>${name}</option>`;
+    opts += `<option value="${name}" ${name===city?'selected':''}>${name}</option>`;
   }
   weatherEl.innerHTML = `
     <div class="weather-head">
-      <div class="weather-city">
-        <span>📍</span>
-        <select id="city-select">${cityOptions}</select>
-      </div>
+      <div class="weather-city"><span>📍</span><select id="city-select">${opts}</select></div>
       <div class="weather-update" id="weather-update"></div>
     </div>
     <div id="weather-body"><div class="weather-loading">正在加载天气...</div></div>
   `;
   document.getElementById('city-select').addEventListener('change', (e) => {
-    saveCity(e.target.value);
-    loadWeather();
+    saveCity(e.target.value); loadWeather();
   });
 
   const { lat, lon } = CITIES[city];
@@ -635,29 +767,25 @@ async function loadWeather() {
     const feels = Math.round(cur.apparent_temperature);
     const humidity = cur.relative_humidity_2m;
     const wind = Math.round(cur.wind_speed_10m);
-
     document.getElementById('weather-body').innerHTML = `
       <div class="weather-now">
         <div class="weather-icon">${icon}</div>
         <div style="flex:1;min-width:0">
           <div class="weather-temp">${temp}°C</div>
           <div class="weather-desc">${desc} · 体感 ${feels}°C</div>
-          <div class="weather-meta">
-            湿度 ${humidity}% · 风速 ${wind} km/h
-          </div>
+          <div class="weather-meta">湿度 ${humidity}% · 风速 ${wind} km/h</div>
         </div>
-      </div>
-    `;
-
-    const updTime = new Date(cur.time || new Date());
-    const updBJ = new Date(updTime.getTime() + 8 * 3600000);
-    document.getElementById('weather-update').textContent = `更新于 ${updBJ.getUTCMonth()+1}/${updBJ.getUTCDate()} ${String(updBJ.getUTCHours()).padStart(2,'0')}:${String(updBJ.getUTCMinutes()).padStart(2,'0')}`;
+      </div>`;
+    const upd = new Date(cur.time || new Date());
+    const u = new Date(upd.getTime() + 8 * 3600000);
+    document.getElementById('weather-update').textContent =
+      `更新于 ${u.getUTCMonth()+1}/${u.getUTCDate()} ${String(u.getUTCHours()).padStart(2,'0')}:${String(u.getUTCMinutes()).padStart(2,'0')}`;
   } catch (err) {
     document.getElementById('weather-body').innerHTML = `<div class="weather-loading">天气加载失败：${err.message || '未知错误'}</div>`;
   }
 }
 
-// ===== AI data fetching =====
+// ===== AI data =====
 const SECTIONS = [
   { id: 'models', label: '模型发布/更新', cat: 'ai-models' },
   { id: 'products', label: '产品发布/更新', cat: 'ai-products' },
@@ -671,23 +799,29 @@ async function fetchCategory(cat, fallbackMode) {
   let data = await fetchJSON(url);
   let items = data.items || [];
   let note = '';
-
   if (items.length === 0 && fallbackMode) {
     url = `${API_BASE}/items?mode=all&window=7d&category=${cat}&limit=5`;
     data = await fetchJSON(url);
     items = data.items || [];
     if (items.length > 0) note = '（非精选，7天窗口补充）';
   }
-
   return { items, note };
 }
 
-function cardHTML(item, num) {
+// Global data
+let allItems = []; // { item, num, key, sectionId }
+let appMeta = { dateStr: '', dailyUrl: '', windowStr: '' };
+
+function cardHTML(entry) {
+  const item = entry.item;
   const time = fmtTime(getTime(item));
   const source = item.source ? item.source.name : '未知来源';
   const summary = truncate(item.summary || '', 110);
-  return `<div class="card" data-num="${num}">
-    <div class="card-num">${num}</div>
+  const fav = isFav(entry.key);
+  const rd = isRead(entry.key);
+  return `<div class="card ${rd ? 'read' : ''} ${fav ? 'fav' : ''}" data-num="${entry.num}">
+    <div class="card-num">${entry.num}</div>
+    <button class="card-fav ${fav ? 'on' : ''}" aria-label="收藏">${fav ? '★' : '☆'}</button>
     <div class="card-title">${item.title}</div>
     <div class="card-meta">
       <span class="card-chip">${source}</span>
@@ -698,42 +832,115 @@ function cardHTML(item, num) {
   </div>`;
 }
 
-// ===== Modal =====
-let allItems = [];
+function matchSearch(item) {
+  if (!searchQuery) return true;
+  const q = searchQuery.toLowerCase();
+  const hay = (item.title + ' ' + (item.summary || '') + ' ' + (item.source ? item.source.name : '')).toLowerCase();
+  return hay.includes(q);
+}
 
-function openModal(item, num) {
+function visibleEntries() {
+  return allItems.filter(e => {
+    if (filter === 'favorites' && !isFav(e.key)) return false;
+    if (filter === 'unread' && isRead(e.key)) return false;
+    if (!matchSearch(e.item)) return false;
+    return true;
+  });
+}
+
+// ===== Render (local only, no refetch) =====
+function render() {
+  const entries = visibleEntries();
+  const bySection = {};
+  for (const e of entries) (bySection[e.sectionId] = bySection[e.sectionId] || []).push(e);
+
+  let navHTML = '';
+  let statsHTML = '';
+  let mainHTML = '';
+  let shown = 0;
+
+  for (const sec of SECTIONS) {
+    const cards = bySection[sec.id] || [];
+    const isFiltered = (filter !== 'all') || searchQuery;
+    if (cards.length === 0 && isFiltered) continue; // hide empty sections while filtering
+    shown += cards.length;
+    navHTML += `<a href="#section-${sec.id}">${sec.label} (${cards.length})</a>`;
+    statsHTML += `<div class="stat-item"><div class="stat-num">${cards.length}</div><div class="stat-label">${sec.label}</div></div>`;
+    mainHTML += `<section class="section" id="section-${sec.id}">
+      <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${cards.length} 条</span></div>`;
+    if (cards.length === 0) mainHTML += `<div class="empty-section">暂无数据</div>`;
+    else mainHTML += `<div class="cards">${cards.map(cardHTML).join('')}</div>`;
+    mainHTML += `</section>`;
+  }
+
+  if (shown === 0) {
+    mainHTML = `<div class="empty-section" style="margin-top:24px">没有匹配的资讯 😶</div>`;
+  }
+
+  document.getElementById('main-content').innerHTML = mainHTML;
+  document.getElementById('nav-inner').innerHTML = navHTML;
+  document.getElementById('hero-stats').innerHTML = statsHTML;
+  document.getElementById('toolbar-count').textContent =
+    `显示 ${shown} / 共 ${allItems.length} 条` + (filter !== 'all' ? ` · 筛选：${filter === 'favorites' ? '收藏' : '未读'}` : '');
+
+  bindCards();
+  initScrollSpy();
+}
+
+function bindCards() {
+  document.querySelectorAll('.card').forEach(el => {
+    el.addEventListener('click', () => {
+      const num = parseInt(el.dataset.num, 10);
+      const entry = allItems.find(x => x.num === num);
+      if (entry) openModal(entry);
+    });
+  });
+  document.querySelectorAll('.card-fav').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const num = parseInt(btn.closest('.card').dataset.num, 10);
+      const entry = allItems.find(x => x.num === num);
+      if (entry) { toggleFav(entry.key); render(); }
+    });
+  });
+}
+
+// ===== Modal =====
+function openModal(entry) {
+  const item = entry.item;
   const time = fmtTime(getTime(item));
   const source = item.source ? item.source.name : '未知来源';
   const summary = item.summary || '';
-  const url = item.links.original || item.links.aihot || '';
+  const url = item.links ? (item.links.original || item.links.aihot) : '';
 
-  document.getElementById('modal-num').textContent = `序号 ${num}`;
+  document.getElementById('modal-num').textContent = `序号 ${entry.num}`;
   document.getElementById('modal-title').textContent = item.title;
   document.getElementById('modal-source').textContent = source;
   document.getElementById('modal-time').textContent = time;
   document.getElementById('modal-source-detail').textContent = `来源：${source}`;
 
   if (summary) {
-    document.getElementById('modal-summary').className = 'modal-summary';
-    document.getElementById('modal-summary').textContent = summary;
+    const s = document.getElementById('modal-summary');
+    s.className = 'modal-summary';
+    s.textContent = summary;
   } else {
-    document.getElementById('modal-summary').className = 'modal-summary-empty';
-    document.getElementById('modal-summary').textContent = '暂无摘要，请通过下方链接查看原文。';
+    const s = document.getElementById('modal-summary');
+    s.className = 'modal-summary-empty';
+    s.textContent = '暂无摘要，请通过下方链接查看原文。';
   }
 
   const cta = document.getElementById('modal-cta');
   if (url) {
-    cta.href = url;
-    cta.classList.remove('disabled');
-    cta.textContent = '查看原文 →';
+    cta.href = url; cta.classList.remove('disabled'); cta.textContent = '查看原文 →';
   } else {
-    cta.removeAttribute('href');
-    cta.classList.add('disabled');
-    cta.textContent = '暂无原文链接';
+    cta.removeAttribute('href'); cta.classList.add('disabled'); cta.textContent = '暂无原文链接';
   }
 
   document.getElementById('modal-backdrop').classList.add('show');
   document.body.classList.add('modal-open');
+
+  // mark as read
+  if (!isRead(entry.key)) { markRead(entry.key); render(); }
 }
 
 function closeModal() {
@@ -741,12 +948,11 @@ function closeModal() {
   document.body.classList.remove('modal-open');
 }
 
+// ===== Data load =====
 function buildPage() {
   document.getElementById('hero-date').textContent = '正在拉取数据...';
   document.getElementById('hero-date').classList.add('loading-text');
   document.getElementById('hero-total').textContent = '—';
-  document.getElementById('hero-stats').innerHTML = '';
-  document.getElementById('nav-inner').innerHTML = '';
   document.getElementById('main-content').innerHTML = '';
   document.getElementById('footer-inner').innerHTML = '';
   document.getElementById('error-banner').classList.remove('show');
@@ -754,19 +960,15 @@ function buildPage() {
 
 async function load() {
   buildPage();
-
   const dailyPromise = fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null);
   const catPromises = SECTIONS.map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
-
   const [daily, ...catResults] = await Promise.all([dailyPromise, ...catPromises]);
 
-  let dateStr = '';
-  let windowStr = '';
-  let dailyUrl = 'https://aihot.virxact.com/daily';
+  let dateStr = '', windowStr = '', dailyUrl = 'https://aihot.virxact.com/daily';
   if (daily && daily.report && daily.report.date) {
     const d = daily.report.date;
     dateStr = d;
-    dailyUrl = daily.report.links?.aihot || dailyUrl + '/' + d;
+    dailyUrl = daily.report.links ? (daily.report.links.aihot || dailyUrl + '/' + d) : dailyUrl + '/' + d;
     const ws = daily.report.windowStart ? new Date(daily.report.windowStart) : null;
     const we = daily.report.windowEnd ? new Date(daily.report.windowEnd) : null;
     if (ws && we) {
@@ -782,72 +984,21 @@ async function load() {
   }
 
   let globalNum = 0;
-  const sectionData = [];
   allItems = [];
-
   for (let i = 0; i < SECTIONS.length; i++) {
     const sec = SECTIONS[i];
     const result = catResults[i];
     const items = result.items || [];
-    const note = result.note || '';
-
-    const cards = items.map(item => {
+    for (const item of items) {
       globalNum++;
-      allItems.push({ item, num: globalNum });
-      return { html: cardHTML(item, globalNum), item };
-    });
-
-    sectionData.push({
-      id: sec.id,
-      label: sec.label,
-      note,
-      cards,
-      count: items.length,
-    });
+      allItems.push({ item, num: globalNum, key: itemKey(item), sectionId: sec.id });
+    }
   }
 
   document.title = `AI 日报 — ${dateStr}`;
-
   document.getElementById('hero-date').textContent = windowStr || '数据加载中...';
   document.getElementById('hero-date').classList.remove('loading-text');
   document.getElementById('hero-total').textContent = globalNum;
-
-  let statsHTML = '';
-  for (const sd of sectionData) {
-    statsHTML += `<div class="stat-item"><div class="stat-num">${sd.count}</div><div class="stat-label">${sd.label}</div></div>`;
-  }
-  document.getElementById('hero-stats').innerHTML = statsHTML;
-
-  let navHTML = '';
-  for (const sd of sectionData) {
-    navHTML += `<a href="#section-${sd.id}">${sd.label}</a>`;
-  }
-  document.getElementById('nav-inner').innerHTML = navHTML;
-
-  let mainHTML = '';
-  for (const sd of sectionData) {
-    let labelExtra = sd.note ? ` <span style="font-size:12px;color:#c98b2e;">${sd.note}</span>` : '';
-    mainHTML += `<section class="section" id="section-${sd.id}">
-      <div class="section-header">
-        <h2>${sd.label}</h2>
-        <span class="section-count">${sd.count} 条${labelExtra}</span>
-      </div>`;
-    if (sd.cards.length === 0) {
-      mainHTML += `<div class="empty-section">暂无数据</div>`;
-    } else {
-      mainHTML += `<div class="cards">${sd.cards.map(c => c.html).join('')}</div>`;
-    }
-    mainHTML += `</section>`;
-  }
-  document.getElementById('main-content').innerHTML = mainHTML;
-
-  document.querySelectorAll('.card').forEach(el => {
-    el.addEventListener('click', () => {
-      const num = parseInt(el.dataset.num, 10);
-      const found = allItems.find(x => x.num === num);
-      if (found) openModal(found.item, found.num);
-    });
-  });
 
   const genTime = fmtTime(new Date().toISOString());
   document.getElementById('footer-inner').innerHTML = `
@@ -855,9 +1006,10 @@ async function load() {
     <p style="margin-top:6px;font-size:12px">AIHOT v1 API + Open-Meteo · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
   `;
 
-  initScrollSpy();
+  render();
 }
 
+// ===== Scroll spy =====
 function initScrollSpy() {
   const nav = document.getElementById('nav');
   const links = nav.querySelectorAll('a');
@@ -867,29 +1019,46 @@ function initScrollSpy() {
     const el = document.getElementById(id);
     if (el) sections.push({ link: a, el });
   });
-
   function onScroll() {
+    if (sections.length === 0) return;
     let current = sections[0];
     const scrollY = window.scrollY + nav.offsetHeight + 20;
-    for (const s of sections) {
-      if (s.el.offsetTop <= scrollY) current = s;
-    }
+    for (const s of sections) { if (s.el.offsetTop <= scrollY) current = s; }
     links.forEach(a => a.classList.remove('active'));
     if (current) current.link.classList.add('active');
   }
-
   window.removeEventListener('scroll', onScroll);
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 }
 
+// ===== Events =====
+document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  render();
+});
+
+document.getElementById('filter-chips').addEventListener('click', (e) => {
+  const btn = e.target.closest('.filter-chip');
+  if (!btn) return;
+  if (btn.id === 'mark-all-read') {
+    for (const x of allItems) read.add(x.key);
+    LS.set(LS_READ, [...read]);
+    render();
+    return;
+  }
+  filter = btn.dataset.filter;
+  document.querySelectorAll('.filter-chip[data-filter]').forEach(c => c.classList.toggle('active', c === btn));
+  render();
+});
+
 document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-backdrop').addEventListener('click', (e) => {
   if (e.target === document.getElementById('modal-backdrop')) closeModal();
 });
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
-});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
 function handleError(err) {
   const banner = document.getElementById('error-banner');
@@ -899,6 +1068,8 @@ function handleError(err) {
   document.getElementById('hero-date').classList.remove('loading-text');
 }
 
+// ===== Init =====
+applyTheme();
 loadWeather();
 load().catch(handleError);
 
