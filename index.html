@@ -340,6 +340,14 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .card-hotline {
+    font-size: 12px;
+    font-weight: 600;
+    color: #d97706;
+    margin-bottom: 8px;
+    margin-top: -2px;
+  }
+  [data-theme="dark"] .card-hotline { color: #fbbf24; }
   .card-tap-hint {
     display: inline-block;
     margin-top: 10px;
@@ -719,7 +727,7 @@ function fmtTime(iso) {
   return `${y}年${m}月${day}日 ${h}:${min}`;
 }
 
-function getTime(entry) { return entry.publishedAt || entry.discoveredAt; }
+function getTime(entry) { return entry.latestAt || entry.publishedAt || entry.discoveredAt; }
 
 function truncate(str, max) {
   if (!str) return '';
@@ -787,6 +795,7 @@ async function loadWeather() {
 
 // ===== AI data =====
 const SECTIONS = [
+  { id: 'hot', label: '近期热点', hot: true },
   { id: 'models', label: '模型发布/更新', cat: 'ai-models' },
   { id: 'products', label: '产品发布/更新', cat: 'ai-products' },
   { id: 'industry', label: '行业动态', cat: 'industry' },
@@ -819,10 +828,12 @@ function cardHTML(entry) {
   const summary = truncate(item.summary || '', 110);
   const fav = isFav(entry.key);
   const rd = isRead(entry.key);
+  const hotLine = entry.rank ? `<div class="card-hotline">🔥 #${entry.rank} · ${entry.sourceCount || 0} 个信源在聊</div>` : '';
   return `<div class="card ${rd ? 'read' : ''} ${fav ? 'fav' : ''}" data-num="${entry.num}">
     <div class="card-num">${entry.num}</div>
     <button class="card-fav ${fav ? 'on' : ''}" aria-label="收藏">${fav ? '★' : '☆'}</button>
     <div class="card-title">${item.title}</div>
+    ${hotLine}
     <div class="card-meta">
       <span class="card-chip">${source}</span>
       <span class="card-time">${time}</span>
@@ -961,8 +972,9 @@ function buildPage() {
 async function load() {
   buildPage();
   const dailyPromise = fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null);
-  const catPromises = SECTIONS.map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
-  const [daily, ...catResults] = await Promise.all([dailyPromise, ...catPromises]);
+  const hotPromise = fetchJSON(`${API_BASE}/hot-topics`).catch(() => null);
+  const catPromises = SECTIONS.filter(s => !s.hot).map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
+  const [daily, hot, ...catResults] = await Promise.all([dailyPromise, hotPromise, ...catPromises]);
 
   let dateStr = '', windowStr = '', dailyUrl = 'https://aihot.virxact.com/daily';
   if (daily && daily.report && daily.report.date) {
@@ -985,8 +997,26 @@ async function load() {
 
   let globalNum = 0;
   allItems = [];
-  for (let i = 0; i < SECTIONS.length; i++) {
-    const sec = SECTIONS[i];
+
+  const hotSection = SECTIONS.find(s => s.hot);
+  if (hotSection && hot && hot.items && hot.items.length) {
+    for (const item of hot.items.slice(0, 5)) {
+      globalNum++;
+      allItems.push({
+        item,
+        num: globalNum,
+        key: itemKey(item),
+        sectionId: hotSection.id,
+        rank: item.rank,
+        sourceCount: item.sourceCount,
+        signalCount: item.signalCount,
+      });
+    }
+  }
+
+  const nonHotSections = SECTIONS.filter(s => !s.hot);
+  for (let i = 0; i < nonHotSections.length; i++) {
+    const sec = nonHotSections[i];
     const result = catResults[i];
     const items = result.items || [];
     for (const item of items) {
@@ -1002,7 +1032,7 @@ async function load() {
 
   const genTime = fmtTime(new Date().toISOString());
   document.getElementById('footer-inner').innerHTML = `
-    <p>共 <strong>${globalNum}</strong> 条精选资讯 · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报 (${dateStr})</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+    <p>共 <strong>${globalNum}</strong> 条精选资讯与热点 · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报 (${dateStr})</a> · 热点：<a href="https://aihot.virxact.com/hot" target="_blank" rel="noopener noreferrer">AIHOT 热点</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
     <p style="margin-top:6px;font-size:12px">AIHOT v1 API + Open-Meteo · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
   `;
 
