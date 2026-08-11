@@ -481,6 +481,11 @@
     font-size: 12px;
     color: var(--text-muted);
   }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
   .modal-cta {
     display: inline-flex;
     align-items: center;
@@ -492,14 +497,25 @@
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
-    transition: background 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
   }
   .modal-cta:hover { background: #4f46e5; }
   [data-theme="dark"] .modal-cta:hover { background: #6366f1; }
+  .modal-cta.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .modal-cta.secondary:hover { background: var(--accent-light); }
   .modal-cta.disabled {
     background: #d1d5db;
     cursor: not-allowed;
     pointer-events: none;
+  }
+  .modal-cta.secondary.disabled {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
   }
 
   /* ===== Footer ===== */
@@ -628,7 +644,10 @@
     </div>
     <div class="modal-footer">
       <span class="modal-source" id="modal-source-detail"></span>
-      <a class="modal-cta" id="modal-cta" href="#" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      <div class="modal-actions">
+        <a class="modal-cta secondary" id="modal-cta-aihot" href="#" target="_blank" rel="noopener noreferrer">AIHOT 详情</a>
+        <a class="modal-cta" id="modal-cta" href="#" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+      </div>
     </div>
   </div>
 </div>
@@ -922,7 +941,9 @@ function openModal(entry) {
   const time = fmtTime(getTime(item));
   const source = item.source ? item.source.name : '未知来源';
   const summary = item.summary || '';
-  const url = item.links ? (item.links.original || item.links.aihot) : '';
+  const links = item.links || {};
+  const aihotUrl = links.aihot || '';
+  const originalUrl = links.original || '';
 
   document.getElementById('modal-num').textContent = `序号 ${entry.num}`;
   document.getElementById('modal-title').textContent = item.title;
@@ -941,10 +962,24 @@ function openModal(entry) {
   }
 
   const cta = document.getElementById('modal-cta');
-  if (url) {
-    cta.href = url; cta.classList.remove('disabled'); cta.textContent = '查看原文 →';
+  const ctaAihot = document.getElementById('modal-cta-aihot');
+
+  if (aihotUrl) {
+    ctaAihot.href = aihotUrl;
+    ctaAihot.classList.remove('disabled');
   } else {
-    cta.removeAttribute('href'); cta.classList.add('disabled'); cta.textContent = '暂无原文链接';
+    ctaAihot.removeAttribute('href');
+    ctaAihot.classList.add('disabled');
+  }
+
+  if (originalUrl) {
+    cta.href = originalUrl;
+    cta.classList.remove('disabled');
+    cta.textContent = '查看原文 →';
+  } else {
+    cta.removeAttribute('href');
+    cta.classList.add('disabled');
+    cta.textContent = '暂无原文';
   }
 
   document.getElementById('modal-backdrop').classList.add('show');
