@@ -467,6 +467,24 @@
     color: var(--text-muted);
     font-style: italic;
   }
+  .modal-context-loading {
+    font-size: 14px;
+    color: var(--text-secondary);
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 6px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .modal-context-latest {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+  }
 
   .modal-footer {
     padding: 16px 24px;
@@ -943,6 +961,8 @@ function openModal(entry) {
   const links = item.links || {};
   const aihotUrl = links.aihot || '';
   const originalUrl = links.original || '';
+  const storyMatch = (links.story || '').match(/story\/([a-f0-9-]+)/i);
+  const storyPublicId = storyMatch ? storyMatch[1] : null;
 
   document.getElementById('modal-num').textContent = `序号 ${entry.num}`;
   document.getElementById('modal-title').textContent = item.title;
@@ -950,12 +970,40 @@ function openModal(entry) {
   document.getElementById('modal-time').textContent = time;
   document.getElementById('modal-source-detail').textContent = `来源：${source}`;
 
+  const s = document.getElementById('modal-summary');
   if (summary) {
-    const s = document.getElementById('modal-summary');
     s.className = 'modal-summary';
     s.textContent = summary;
+  } else if (storyPublicId) {
+    s.className = 'modal-context-loading';
+    s.textContent = '📡 正在加载 AIHOT 事件综述...';
+    fetchJSON(`${API_BASE}/stories/${storyPublicId}`).then(d => {
+      const story = (d && d.story) || {};
+      const latest = story.latest || '';
+      const digest = story.digest || '';
+      if (!latest && !digest) {
+        s.className = 'modal-summary-empty';
+        s.textContent = '暂无摘要，请通过下方链接查看原文。';
+        return;
+      }
+      s.className = 'modal-context-loading';
+      s.innerHTML = '';
+      if (latest) {
+        const latestEl = document.createElement('span');
+        latestEl.className = 'modal-context-latest';
+        latestEl.textContent = '📌 最新：' + latest;
+        s.appendChild(latestEl);
+      }
+      if (digest) {
+        const digestEl = document.createElement('span');
+        digestEl.textContent = digest;
+        s.appendChild(digestEl);
+      }
+    }).catch(() => {
+      s.className = 'modal-summary-empty';
+      s.textContent = 'AIHOT 综述加载失败，请通过下方链接查看原文。';
+    });
   } else {
-    const s = document.getElementById('modal-summary');
     s.className = 'modal-summary-empty';
     s.textContent = '暂无摘要，请通过下方链接查看原文。';
   }
