@@ -965,6 +965,9 @@ const SECTIONS = [
   { id: 'weekly', label: '本周精选回顾', weekly: true },
 ];
 
+// 本周回顾最多展示条数（拉取更多是为了去重后仍有余量）
+const WEEKLY_CAP = 15;
+
 async function fetchCategory(cat, fallbackMode) {
   let url = `${API_BASE}/items?mode=selected&window=24h&category=${cat}&limit=10`;
   let data = await fetchJSON(url);
@@ -1182,7 +1185,7 @@ async function load() {
   buildPage();
   const dailyPromise = fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null);
   const hotPromise = fetchJSON(`${API_BASE}/hot-topics`).catch(() => null);
-  const weeklyPromise = fetchJSON(`${API_BASE}/items?mode=selected&window=7d&limit=30`).catch(() => null);
+  const weeklyPromise = fetchJSON(`${API_BASE}/items?mode=selected&window=7d&limit=50`).catch(() => null);
   const catPromises = SECTIONS.filter(s => !s.hot && !s.weekly).map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
   const [daily, hot, weekly, ...catResults] = await Promise.all([dailyPromise, hotPromise, weeklyPromise, ...catPromises]);
 
@@ -1239,12 +1242,15 @@ async function load() {
   const weeklySection = SECTIONS.find(s => s.weekly);
   if (weeklySection && weekly && weekly.items && weekly.items.length) {
     const seen = new Set(allItems.map(x => x.key));
+    let wCount = 0;
     for (const item of weekly.items) {
+      if (wCount >= WEEKLY_CAP) break;
       const k = itemKey(item);
       if (seen.has(k)) continue;
       seen.add(k);
       globalNum++;
       allItems.push({ item, num: globalNum, key: k, sectionId: weeklySection.id });
+      wCount++;
     }
   }
 
