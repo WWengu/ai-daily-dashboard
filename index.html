@@ -466,6 +466,50 @@
     color: var(--text);
     line-height: 1.65;
   }
+  .timeline-hint {
+    display: block;
+    margin-top: 7px;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ===== 弹窗内的日报概览 ===== */
+  .daily-digest { font-size: 14px; }
+  .digest-section { margin-bottom: 20px; }
+  .digest-section:last-child { margin-bottom: 0; }
+  .digest-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .digest-item {
+    padding: 11px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .digest-item:last-child { border-bottom: none; padding-bottom: 2px; }
+  .digest-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+  .digest-item-title a { color: inherit; text-decoration: none; }
+  .digest-item-title a:hover { color: var(--accent); text-decoration: underline; }
+  .digest-item-summary {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+  .digest-item-source {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
   .timeline-group-title {
     font-size: 13px;
     font-weight: 700;
@@ -1081,9 +1125,10 @@ function cardHTML(entry) {
 }
 
 function threadItemHTML(r) {
-  return `<a class="timeline-item" href="${r.url}" target="_blank" rel="noopener noreferrer">
+  return `<a class="timeline-item" href="${r.url}" data-date="${r.date}" target="_blank" rel="noopener noreferrer">
     <div class="timeline-date">${dateLabel(r.date)}</div>
     <div class="timeline-title">${r.title}</div>
+    <span class="timeline-hint">展开当日日报概览 →</span>
   </a>`;
 }
 
@@ -1202,6 +1247,14 @@ function bindCards() {
       if (entry) { toggleFav(entry.key); render(); }
     });
   });
+  // 时间线条目：点击展开当日日报概览（阻止直接跳走）
+  document.querySelectorAll('.timeline-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const row = threadData.find(x => x.date === el.dataset.date);
+      if (row) openThreadModal(row);
+    });
+  });
 }
 
 // ===== Modal =====
@@ -1262,6 +1315,7 @@ function openModal(entry) {
 
   const cta = document.getElementById('modal-cta');
   const ctaAihot = document.getElementById('modal-cta-aihot');
+  ctaAihot.style.display = ''; // 从日报概览弹窗切回时恢复
   if (aihotUrl) { ctaAihot.href = aihotUrl; ctaAihot.classList.remove('disabled'); }
   else { ctaAihot.removeAttribute('href'); ctaAihot.classList.add('disabled'); }
 
@@ -1272,6 +1326,61 @@ function openModal(entry) {
   document.body.classList.add('modal-open');
 
   if (!isRead(entry.key)) { markRead(entry.key); render(); }
+}
+
+// 周报 / 月报时间线：展开某一天的日报概览
+function openThreadModal(row) {
+  document.getElementById('modal-num').textContent = `日报 ${row.date}`;
+  document.getElementById('modal-title').textContent = row.title;
+  document.getElementById('modal-source').textContent = 'AIHOT 日报';
+  document.getElementById('modal-time').textContent = dateLabel(row.date);
+  document.getElementById('modal-source-detail').textContent = `AIHOT 日报 · ${row.date}`;
+
+  const s = document.getElementById('modal-summary');
+  s.className = 'modal-summary-loading';
+  s.textContent = '📡 正在加载该日日报内容...';
+
+  const cta = document.getElementById('modal-cta');
+  const ctaAihot = document.getElementById('modal-cta-aihot');
+  ctaAihot.style.display = 'none'; // 概览弹窗只需一个按钮
+  cta.href = row.url;
+  cta.classList.remove('disabled');
+  cta.textContent = '打开完整日报 →';
+
+  document.getElementById('modal-backdrop').classList.add('show');
+  document.body.classList.add('modal-open');
+
+  fetchJSON(`${API_BASE}/dailies/${row.date}`).then(d => {
+    const r = (d && d.report) || {};
+    const secs = (r.sections || []).filter(x => (x.items || []).length > 0);
+    let total = 0;
+    for (const x of secs) total += x.items.length;
+    if (total === 0) {
+      s.className = 'modal-summary-empty';
+      s.textContent = '该日日报暂无条目内容，可点击下方按钮打开完整日报。';
+      return;
+    }
+    s.className = 'daily-digest';
+    s.innerHTML = secs.map(sec => {
+      const itemsHTML = sec.items.map(it => {
+        const src = (it.source && it.source.name) || '';
+        const sum = it.summary || '';
+        const link = (it.links && (it.links.aihot || it.links.original)) || '';
+        return `<div class="digest-item">
+          <div class="digest-item-title">${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${it.title}</a>` : it.title}</div>
+          ${sum ? `<div class="digest-item-summary">${sum}</div>` : ''}
+          ${src ? `<div class="digest-item-source">${src}</div>` : ''}
+        </div>`;
+      }).join('');
+      return `<div class="digest-section">
+        <div class="digest-section-title">${sec.label} · ${sec.items.length} 条</div>
+        ${itemsHTML}
+      </div>`;
+    }).join('');
+  }).catch(() => {
+    s.className = 'modal-summary-empty';
+    s.textContent = '加载失败，可点击下方按钮打开完整日报。';
+  });
 }
 
 function closeModal() {
