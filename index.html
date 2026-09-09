@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 日报</title>
+<title>AI 日报 · 周报 · 月报</title>
 <style>
   :root {
     --bg: #f8f9fb;
@@ -22,7 +22,6 @@
     --radius-sm: 8px;
   }
 
-  /* ===== Dark theme ===== */
   [data-theme="dark"] {
     --bg: #0f1117;
     --card-bg: #1a1d27;
@@ -98,7 +97,6 @@
   }
   .hero .date-range.loading-text { font-size: 18px; opacity: 0.9; }
 
-  /* Theme toggle */
   .theme-toggle {
     position: absolute;
     top: 16px; right: 16px;
@@ -116,7 +114,6 @@
   }
   .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.08); }
 
-  /* Weather widget */
   .weather {
     background: rgba(255,255,255,0.14);
     backdrop-filter: blur(10px);
@@ -149,9 +146,7 @@
   }
   .weather-city select option { color: #1a1a2e; background: #fff; }
   .weather-update { font-size: 11px; opacity: 0.65; }
-  .weather-now {
-    display: flex; align-items: center; gap: 18px;
-  }
+  .weather-now { display: flex; align-items: center; gap: 18px; }
   .weather-icon { font-size: 48px; line-height: 1; }
   .weather-temp { font-size: 42px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
   .weather-desc { font-size: 14px; opacity: 0.85; margin-top: 4px; }
@@ -178,7 +173,7 @@
   .stat-item .stat-num { font-size: 24px; font-weight: 700; line-height: 1.2; }
   .stat-item .stat-label { font-size: 12px; opacity: 0.75; margin-top: 2px; }
 
-  /* ===== Official report cards (日报 / 周报 / 月报) ===== */
+  /* ===== View switcher (日报 / 周报 / 月报) ===== */
   .reports {
     max-width: 1100px;
     margin: -30px auto 0;
@@ -197,18 +192,22 @@
     border-radius: var(--radius);
     padding: 16px 18px;
     box-shadow: var(--shadow-md);
-    text-decoration: none;
     color: inherit;
     display: flex;
     align-items: center;
     gap: 14px;
+    width: 100%;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
     transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
   }
-  .report-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+  .report-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+  .report-card.active {
     border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-light), var(--shadow-md);
   }
+  .report-card.active .report-title { color: var(--accent); }
   .report-icon {
     width: 44px; height: 44px;
     border-radius: 11px;
@@ -223,12 +222,7 @@
   [data-theme="dark"] .report-icon.weekly  { background: #1e3a2a; }
   [data-theme="dark"] .report-icon.monthly { background: #3a2e1a; }
   .report-body { flex: 1; min-width: 0; }
-  .report-type {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 600;
-    letter-spacing: 0.6px;
-  }
+  .report-type { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.6px; }
   .report-title {
     font-size: 15px; font-weight: 600;
     color: var(--text);
@@ -236,13 +230,6 @@
     line-height: 1.4;
   }
   .report-meta { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-  .report-arrow {
-    color: var(--text-muted);
-    font-size: 15px;
-    flex-shrink: 0;
-    transition: color 0.18s;
-  }
-  .report-card:hover .report-arrow { color: var(--accent); }
 
   /* ===== Nav + Toolbar ===== */
   .nav {
@@ -340,6 +327,8 @@
     font-weight: 400;
     text-align: right;
   }
+  .section-header .section-note a { color: var(--accent); text-decoration: none; }
+  .section-header .section-note a:hover { text-decoration: underline; }
 
   .cards {
     display: grid;
@@ -429,6 +418,64 @@
     font-weight: 500;
   }
 
+  /* ===== Timeline (周报 / 月报脉络) ===== */
+  .timeline { position: relative; padding-left: 30px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 10px; bottom: 10px;
+    width: 2px;
+    background: var(--border);
+  }
+  .timeline-item {
+    position: relative;
+    display: block;
+    padding: 14px 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+  .timeline-item:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    transform: translateX(2px);
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px; top: 20px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+  .timeline-date {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 5px;
+    letter-spacing: 0.3px;
+  }
+  .timeline-title {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.65;
+  }
+  .timeline-group-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 22px 0 12px;
+    padding-left: 2px;
+    letter-spacing: 0.3px;
+  }
+  .timeline-group-title:first-child { margin-top: 0; }
+
   .empty-section {
     padding: 24px;
     text-align: center;
@@ -454,10 +501,7 @@
     pointer-events: none;
     transition: opacity 0.2s ease;
   }
-  .modal-backdrop.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  .modal-backdrop.show { opacity: 1; pointer-events: auto; }
   .modal {
     background: var(--card-bg);
     border-radius: 16px;
@@ -513,9 +557,7 @@
     cursor: pointer;
     font-size: 18px;
     color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     transition: background 0.15s;
   }
@@ -523,11 +565,7 @@
   .modal-close:hover { background: #e2e5ee; }
   [data-theme="dark"] .modal-close:hover { background: #34394a; }
 
-  .modal-body {
-    padding: 20px 24px;
-    overflow-y: auto;
-    flex: 1;
-  }
+  .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
   .modal-summary {
     font-size: 15px;
     line-height: 1.75;
@@ -572,15 +610,8 @@
     gap: 12px;
     flex-wrap: wrap;
   }
-  .modal-source {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
+  .modal-source { font-size: 12px; color: var(--text-muted); }
+  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .modal-cta {
     display: inline-flex;
     align-items: center;
@@ -602,11 +633,7 @@
     border: 1px solid var(--accent);
   }
   .modal-cta.secondary:hover { background: var(--accent-light); }
-  .modal-cta.disabled {
-    background: #d1d5db;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
+  .modal-cta.disabled { background: #d1d5db; cursor: not-allowed; pointer-events: none; }
   .modal-cta.secondary.disabled {
     background: transparent;
     border-color: var(--border);
@@ -671,6 +698,8 @@
     .weather-temp { font-size: 32px; }
     .modal-header, .modal-body, .modal-footer { padding-left: 18px; padding-right: 18px; }
     .modal-title { font-size: 16px; }
+    .timeline { padding-left: 24px; }
+    .timeline-item::before { left: -20px; }
   }
 
   html { scroll-behavior: smooth; scroll-padding-top: 100px; }
@@ -683,51 +712,47 @@
 <div class="hero">
   <button class="theme-toggle" id="theme-toggle" aria-label="切换深色模式" title="切换深色/浅色">🌙</button>
   <div class="hero-content">
-    <div class="hero-badge">AIHOT 每日精选</div>
-    <h1>AI 日报</h1>
+    <div class="hero-badge" id="hero-badge">AIHOT 每日精选</div>
+    <h1 id="hero-title">AI 日报</h1>
     <div class="date-range loading-text" id="hero-date">正在拉取数据...</div>
 
-    <!-- Weather widget -->
     <div class="weather" id="weather">
       <div class="weather-loading">正在加载天气...</div>
     </div>
 
     <div class="total" id="hero-total">—</div>
-    <div class="total-label">条精选资讯</div>
+    <div class="total-label" id="hero-total-label">条精选资讯</div>
     <div class="stats-bar" id="hero-stats"></div>
   </div>
 </div>
 
-<!-- Official reports: 日报 / 周报 / 月报 -->
+<!-- View switcher: 日报 / 周报 / 月报 -->
 <div class="reports">
-  <div class="reports-grid">
-    <a class="report-card" id="report-daily" href="https://aihot.virxact.com/daily" target="_blank" rel="noopener noreferrer">
+  <div class="reports-grid" id="reports-grid">
+    <button class="report-card active" type="button" data-view="daily">
       <div class="report-icon daily">📅</div>
       <div class="report-body">
-        <div class="report-type">AIHOT 官方</div>
+        <div class="report-type">按天 · 24 小时</div>
         <div class="report-title">AI 日报</div>
         <div class="report-meta" id="report-daily-meta">加载中...</div>
       </div>
-      <div class="report-arrow">→</div>
-    </a>
-    <a class="report-card" id="report-weekly" href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">
+    </button>
+    <button class="report-card" type="button" data-view="weekly">
       <div class="report-icon weekly">📆</div>
       <div class="report-body">
-        <div class="report-type">AIHOT 官方</div>
+        <div class="report-type">按周 · 官方导语</div>
         <div class="report-title">AI 周报</div>
-        <div class="report-meta" id="report-weekly-meta">点击前往官网查看 →</div>
+        <div class="report-meta" id="report-weekly-meta">加载中...</div>
       </div>
-      <div class="report-arrow">↗</div>
-    </a>
-    <a class="report-card" id="report-monthly" href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">
+    </button>
+    <button class="report-card" type="button" data-view="monthly">
       <div class="report-icon monthly">🗓️</div>
       <div class="report-body">
-        <div class="report-type">AIHOT 官方</div>
+        <div class="report-type">按月 · 官方导语</div>
         <div class="report-title">AI 月报</div>
-        <div class="report-meta" id="report-monthly-meta">点击前往官网查看 →</div>
+        <div class="report-meta" id="report-monthly-meta">加载中...</div>
       </div>
-      <div class="report-arrow">↗</div>
-    </a>
+    </button>
   </div>
 </div>
 
@@ -798,12 +823,15 @@ const LS = {
 const LS_THEME = 'ai-daily-theme';
 const LS_FAV = 'ai-daily-fav';
 const LS_READ = 'ai-daily-read';
+const LS_VIEW = 'ai-daily-view';
 
 let theme = LS.get(LS_THEME, 'light');
 let favorites = new Set(LS.get(LS_FAV, []));
 let read = new Set(LS.get(LS_READ, []));
 let searchQuery = '';
 let filter = 'all'; // all | favorites | unread
+let view = LS.get(LS_VIEW, 'daily'); // daily | weekly | monthly
+if (!['daily', 'weekly', 'monthly'].includes(view)) view = 'daily';
 
 // ===== City presets =====
 const CITIES = {
@@ -869,25 +897,33 @@ function fmtTime(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   const bj = new Date(d.getTime() + 8 * 3600000);
-  const y = bj.getUTCFullYear();
-  const m = bj.getUTCMonth() + 1;
-  const day = bj.getUTCDate();
-  const h = String(bj.getUTCHours()).padStart(2,'0');
-  const min = String(bj.getUTCMinutes()).padStart(2,'0');
-  return `${y}年${m}月${day}日 ${h}:${min}`;
+  return `${bj.getUTCFullYear()}年${bj.getUTCMonth()+1}月${bj.getUTCDate()}日 ` +
+    `${String(bj.getUTCHours()).padStart(2,'0')}:${String(bj.getUTCMinutes()).padStart(2,'0')}`;
 }
-
 function getTime(entry) { return entry.latestAt || entry.publishedAt || entry.discoveredAt; }
 
-// ISO 8601 周序号（按北京时间计算），用于周报卡片标签
-function isoWeekBJ() {
-  const d = new Date(Date.now() + 8 * 3600000);
-  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+const WD = ['周日','周一','周二','周三','周四','周五','周六'];
+// "2026-09-09" -> "09-09 周三"
+function dateLabel(dateStr) {
+  const p = String(dateStr).split('-').map(Number);
+  if (p.length < 3 || isNaN(p[0])) return dateStr;
+  const d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+  return `${String(p[1]).padStart(2,'0')}-${String(p[2]).padStart(2,'0')} ${WD[d.getUTCDay()]}`;
+}
+// ISO 周序号（按 UTC 日期算，日期串固定无时区歧义）
+function isoWeekOf(dateStr) {
+  const p = String(dateStr).split('-').map(Number);
+  const t = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
   const dayNum = t.getUTCDay() || 7;
   t.setUTCDate(t.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
   const week = Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
   return { year: t.getUTCFullYear(), week: week };
+}
+// 当前北京时间的 ISO 周序号（用于周报卡片标签）
+function isoWeekBJ() {
+  const d = new Date(Date.now() + 8 * 3600000);
+  return isoWeekOf(`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`);
 }
 
 function truncate(str, max) {
@@ -945,8 +981,7 @@ async function loadWeather() {
           <div class="weather-meta">湿度 ${humidity}% · 风速 ${wind} km/h</div>
         </div>
       </div>`;
-    const upd = new Date(cur.time || new Date());
-    const u = new Date(upd.getTime() + 8 * 3600000);
+    const u = new Date(new Date(cur.time || new Date()).getTime() + 8 * 3600000);
     document.getElementById('weather-update').textContent =
       `更新于 ${u.getUTCMonth()+1}/${u.getUTCDate()} ${String(u.getUTCHours()).padStart(2,'0')}:${String(u.getUTCMinutes()).padStart(2,'0')}`;
   } catch (err) {
@@ -954,37 +989,74 @@ async function loadWeather() {
   }
 }
 
-// ===== AI data =====
-const SECTIONS = [
-  { id: 'hot', label: '近期热点', hot: true },
-  { id: 'models', label: '模型发布/更新', cat: 'ai-models' },
-  { id: 'products', label: '产品发布/更新', cat: 'ai-products' },
-  { id: 'industry', label: '行业动态', cat: 'industry' },
-  { id: 'papers', label: '论文研究', cat: 'paper', fallback: true },
-  { id: 'tips', label: '技巧与观点', cat: 'tip' },
-  { id: 'weekly', label: '本周精选回顾', weekly: true },
-];
+// ===== Views =====
+// 每个视图有完全不同的版块构成：
+//  - daily:   24h 五版块 + 热点（卡片墙）
+//  - weekly:  本周每日官方导语时间线 + 本周 7d 精选
+//  - monthly: 本月每日官方导语，按 ISO 周分组
+const VIEWS = {
+  daily: {
+    label: 'AI 日报',
+    badge: 'AIHOT 每日精选',
+    totalLabel: '条精选资讯',
+    sections: [
+      { id: 'hot', label: '近期热点', hot: true },
+      { id: 'models', label: '模型发布/更新', cat: 'ai-models' },
+      { id: 'products', label: '产品发布/更新', cat: 'ai-products' },
+      { id: 'industry', label: '行业动态', cat: 'industry' },
+      { id: 'papers', label: '论文研究', cat: 'paper', fallback: true },
+      { id: 'tips', label: '技巧与观点', cat: 'tip' },
+    ],
+  },
+  weekly: {
+    label: 'AI 周报',
+    badge: 'AIHOT 本周脉络 · 官方每日导语',
+    totalLabel: '条本周精选',
+    sections: [
+      { id: 'w-thread', label: '本周脉络', thread: true },
+      { id: 'w-picks', label: '本周精选', picks: true },
+    ],
+  },
+  monthly: {
+    label: 'AI 月报',
+    badge: 'AIHOT 本月脉络 · 官方每日导语',
+    totalLabel: '天官方头条',
+    sections: [
+      { id: 'm-thread', label: '本月脉络', thread: true, groupByWeek: true },
+    ],
+  },
+};
 
-// 本周回顾最多展示条数（拉取更多是为了去重后仍有余量）
-const WEEKLY_CAP = 15;
+const WEEKLY_PICKS_CAP = 24; // 周报精选最多展示条数
 
 async function fetchCategory(cat, fallbackMode) {
   let url = `${API_BASE}/items?mode=selected&window=24h&category=${cat}&limit=10`;
   let data = await fetchJSON(url);
   let items = data.items || [];
-  let note = '';
   if (items.length === 0 && fallbackMode) {
     url = `${API_BASE}/items?mode=all&window=7d&category=${cat}&limit=5`;
     data = await fetchJSON(url);
     items = data.items || [];
-    if (items.length > 0) note = '（非精选，7天窗口补充）';
   }
-  return { items, note };
+  return { items };
 }
 
-// Global data
-let allItems = []; // { item, num, key, sectionId }
-let appMeta = { dateStr: '', dailyUrl: '', windowStr: '' };
+// 日报归档 -> 官方每日导语时间线
+function parseThread(d) {
+  const items = (d && d.items) || [];
+  return items
+    .map(x => ({
+      date: x.date,
+      title: x.leadTitle || '',
+      url: (x.links && x.links.aihot) || `https://aihot.virxact.com/daily/${x.date}`,
+    }))
+    .filter(x => x.date && x.title);
+}
+
+// Global state
+let allItems = [];    // 当前视图的卡片条目
+let threadData = [];  // 当前视图的时间线条目
+let viewData = { daily: null, weekly: null, monthly: null }; // 视图数据缓存
 
 function cardHTML(entry) {
   const item = entry.item;
@@ -1008,6 +1080,13 @@ function cardHTML(entry) {
   </div>`;
 }
 
+function threadItemHTML(r) {
+  return `<a class="timeline-item" href="${r.url}" target="_blank" rel="noopener noreferrer">
+    <div class="timeline-date">${dateLabel(r.date)}</div>
+    <div class="timeline-title">${r.title}</div>
+  </a>`;
+}
+
 function matchSearch(item) {
   if (!searchQuery) return true;
   const q = searchQuery.toLowerCase();
@@ -1024,30 +1103,72 @@ function visibleEntries() {
   });
 }
 
-// ===== Render (local only, no refetch) =====
+// 时间线只在「全部 + 有搜索词」时参与过滤；收藏/未读筛选下隐藏
+function visibleThread() {
+  if (filter !== 'all') return [];
+  if (!searchQuery) return threadData;
+  const q = searchQuery.toLowerCase();
+  return threadData.filter(r => (r.title + ' ' + r.date).toLowerCase().includes(q));
+}
+
+// ===== Render (纯本地重绘，不重新拉数据) =====
 function render() {
+  const viewDef = VIEWS[view];
   const entries = visibleEntries();
   const bySection = {};
   for (const e of entries) (bySection[e.sectionId] = bySection[e.sectionId] || []).push(e);
 
-  let navHTML = '';
-  let statsHTML = '';
-  let mainHTML = '';
-  let shown = 0;
+  const isFiltered = (filter !== 'all') || !!searchQuery;
+  let navHTML = '', statsHTML = '', mainHTML = '', shown = 0;
 
-  for (const sec of SECTIONS) {
-    const cards = bySection[sec.id] || [];
-    const isFiltered = (filter !== 'all') || searchQuery;
-    if (cards.length === 0 && isFiltered) continue; // hide empty sections while filtering
-    shown += cards.length;
-    navHTML += `<a href="#section-${sec.id}">${sec.label} (${cards.length})</a>`;
-    statsHTML += `<div class="stat-item"><div class="stat-num">${cards.length}</div><div class="stat-label">${sec.label}</div></div>`;
-    const noteHTML = sec.weekly ? `<span class="section-note">过去 7 天精选 · 已排除上方今日条目</span>` : '';
-    mainHTML += `<section class="section" id="section-${sec.id}">
-      <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${cards.length} 条</span>${noteHTML}</div>`;
-    if (cards.length === 0) mainHTML += `<div class="empty-section">暂无数据</div>`;
-    else mainHTML += `<div class="cards">${cards.map(cardHTML).join('')}</div>`;
-    mainHTML += `</section>`;
+  for (const sec of viewDef.sections) {
+    if (sec.thread) {
+      const rows = visibleThread();
+      if (rows.length === 0 && isFiltered) continue;
+      shown += rows.length;
+      navHTML += `<a href="#section-${sec.id}">${sec.label} (${rows.length})</a>`;
+      statsHTML += `<div class="stat-item"><div class="stat-num">${rows.length}</div><div class="stat-label">${sec.label}</div></div>`;
+
+      let bodyHTML = '';
+      if (rows.length === 0) {
+        bodyHTML = `<div class="empty-section">暂无数据</div>`;
+      } else if (sec.groupByWeek) {
+        const groups = {};
+        for (const r of rows) {
+          const iw = isoWeekOf(r.date);
+          const k = `${iw.year}-W${String(iw.week).padStart(2, '0')}`;
+          (groups[k] = groups[k] || []).push(r);
+        }
+        bodyHTML = '<div class="timeline">' + Object.keys(groups).sort().reverse().map(k => {
+          const wk = k.split('-W')[1];
+          const last = groups[k][0], first = groups[k][groups[k].length - 1];
+          return `<div class="timeline-group-title">第 ${wk} 周 · ${first.date} ~ ${last.date} · ${groups[k].length} 天</div>` +
+            groups[k].map(threadItemHTML).join('');
+        }).join('') + '</div>';
+      } else {
+        bodyHTML = `<div class="timeline">${rows.map(threadItemHTML).join('')}</div>`;
+      }
+
+      const officialLink = view === 'weekly'
+        ? `<a href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">AIHOT 官方周报 ↗</a>`
+        : `<a href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">AIHOT 官方月报 ↗</a>`;
+      mainHTML += `<section class="section" id="section-${sec.id}">
+        <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${rows.length} 天</span><span class="section-note">AIHOT 官方每日头条 · ${officialLink}</span></div>
+        ${bodyHTML}
+      </section>`;
+    } else {
+      const cards = bySection[sec.id] || [];
+      if (cards.length === 0 && isFiltered) continue;
+      shown += cards.length;
+      navHTML += `<a href="#section-${sec.id}">${sec.label} (${cards.length})</a>`;
+      statsHTML += `<div class="stat-item"><div class="stat-num">${cards.length}</div><div class="stat-label">${sec.label}</div></div>`;
+      const noteHTML = sec.picks ? `<span class="section-note">过去 7 天精选 · 最多 ${WEEKLY_PICKS_CAP} 条</span>` : '';
+      mainHTML += `<section class="section" id="section-${sec.id}">
+        <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${cards.length} 条</span>${noteHTML}</div>`;
+      if (cards.length === 0) mainHTML += `<div class="empty-section">暂无数据</div>`;
+      else mainHTML += `<div class="cards">${cards.map(cardHTML).join('')}</div>`;
+      mainHTML += `</section>`;
+    }
   }
 
   if (shown === 0) {
@@ -1058,7 +1179,8 @@ function render() {
   document.getElementById('nav-inner').innerHTML = navHTML;
   document.getElementById('hero-stats').innerHTML = statsHTML;
   document.getElementById('toolbar-count').textContent =
-    `显示 ${shown} / 共 ${allItems.length} 条` + (filter !== 'all' ? ` · 筛选：${filter === 'favorites' ? '收藏' : '未读'}` : '');
+    `显示 ${shown} 条` + (filter !== 'all' ? ` · 筛选：${filter === 'favorites' ? '收藏' : '未读'}` : '') +
+    (searchQuery ? ` · 搜索：${searchQuery}` : '');
 
   bindCards();
   initScrollSpy();
@@ -1140,29 +1262,15 @@ function openModal(entry) {
 
   const cta = document.getElementById('modal-cta');
   const ctaAihot = document.getElementById('modal-cta-aihot');
+  if (aihotUrl) { ctaAihot.href = aihotUrl; ctaAihot.classList.remove('disabled'); }
+  else { ctaAihot.removeAttribute('href'); ctaAihot.classList.add('disabled'); }
 
-  if (aihotUrl) {
-    ctaAihot.href = aihotUrl;
-    ctaAihot.classList.remove('disabled');
-  } else {
-    ctaAihot.removeAttribute('href');
-    ctaAihot.classList.add('disabled');
-  }
-
-  if (originalUrl) {
-    cta.href = originalUrl;
-    cta.classList.remove('disabled');
-    cta.textContent = '查看原文 →';
-  } else {
-    cta.removeAttribute('href');
-    cta.classList.add('disabled');
-    cta.textContent = '暂无原文';
-  }
+  if (originalUrl) { cta.href = originalUrl; cta.classList.remove('disabled'); cta.textContent = '查看原文 →'; }
+  else { cta.removeAttribute('href'); cta.classList.add('disabled'); cta.textContent = '暂无原文'; }
 
   document.getElementById('modal-backdrop').classList.add('show');
   document.body.classList.add('modal-open');
 
-  // mark as read
   if (!isRead(entry.key)) { markRead(entry.key); render(); }
 }
 
@@ -1172,120 +1280,144 @@ function closeModal() {
 }
 
 // ===== Data load =====
-function buildPage() {
+async function fetchViewData(name) {
+  if (name === 'daily') {
+    const cats = VIEWS.daily.sections.filter(s => !s.hot);
+    const [daily, hot, ...catResults] = await Promise.all([
+      fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null),
+      fetchJSON(`${API_BASE}/hot-topics`).catch(() => null),
+      ...cats.map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [] }))),
+    ]);
+    return { daily, hot, cats, catResults };
+  }
+  if (name === 'weekly') {
+    const [thread, picks] = await Promise.all([
+      fetchJSON(`${API_BASE}/dailies?limit=7`).catch(() => null),
+      fetchJSON(`${API_BASE}/items?mode=selected&window=7d&limit=50`).catch(() => null),
+    ]);
+    return { thread: parseThread(thread), picks: (picks && picks.items) || [] };
+  }
+  // monthly
+  const thread = await fetchJSON(`${API_BASE}/dailies?limit=30`).catch(() => null);
+  return { thread: parseThread(thread) };
+}
+
+function applyView(name) {
+  view = name;
+  LS.set(LS_VIEW, view);
+  const d = viewData[name];
+  const viewDef = VIEWS[name];
+
+  allItems = [];
+  threadData = d.thread || [];
+  let globalNum = 0;
+
+  if (name === 'daily') {
+    if (d.hot && d.hot.items && d.hot.items.length) {
+      for (const item of d.hot.items.slice(0, 5)) {
+        globalNum++;
+        allItems.push({
+          item, num: globalNum, key: itemKey(item), sectionId: 'hot',
+          rank: item.rank, sourceCount: item.sourceCount, signalCount: item.signalCount,
+        });
+      }
+    }
+    const cats = d.cats;
+    for (let i = 0; i < cats.length; i++) {
+      for (const item of (d.catResults[i].items || [])) {
+        globalNum++;
+        allItems.push({ item, num: globalNum, key: itemKey(item), sectionId: cats[i].id });
+      }
+    }
+  } else if (name === 'weekly') {
+    for (const item of (d.picks || [])) {
+      if (globalNum >= WEEKLY_PICKS_CAP) break;
+      globalNum++;
+      allItems.push({ item, num: globalNum, key: itemKey(item), sectionId: 'w-picks' });
+    }
+  }
+  // monthly 只有时间线，无卡片条目
+
+  // ---- Hero ----
+  document.getElementById('hero-title').textContent = viewDef.label;
+  document.getElementById('hero-badge').textContent = viewDef.badge;
+  document.getElementById('hero-total-label').textContent = viewDef.totalLabel;
+  document.title = viewDef.label;
+
+  let dateLine = '';
+  if (name === 'daily') {
+    const r = (d.daily && d.daily.report) || null;
+    if (r && r.windowStart && r.windowEnd) {
+      const bj = (utc) => { const t = new Date(utc.getTime() + 8*3600000); return `${t.getUTCFullYear()}年${t.getUTCMonth()+1}月${t.getUTCDate()}日 ${String(t.getUTCHours()).padStart(2,'0')}:00`; };
+      dateLine = `${bj(new Date(r.windowStart))} — ${bj(new Date(r.windowEnd))}（北京时间）`;
+    } else {
+      const bj = new Date(Date.now() + 8*3600000);
+      dateLine = `${bj.getUTCFullYear()}年${bj.getUTCMonth()+1}月${bj.getUTCDate()}日（北京时间）`;
+    }
+  } else {
+    const t = threadData;
+    if (t.length) {
+      const first = t[t.length - 1], last = t[0];
+      dateLine = `${first.date} 至 ${last.date} · 共 ${t.length} 天`;
+    } else {
+      dateLine = '暂无归档数据';
+    }
+  }
+
+  document.getElementById('hero-date').textContent = dateLine || '数据加载中...';
+  document.getElementById('hero-date').classList.remove('loading-text');
+  document.getElementById('hero-total').textContent =
+    name === 'monthly' ? threadData.length : (name === 'weekly' ? allItems.length : allItems.length);
+
+  // ---- 三个视图卡片的摘要 ----
+  const dd = viewData.daily;
+  const dr = (dd && dd.daily && dd.daily.report) || null;
+  if (dr) {
+    let cnt = 0;
+    for (const s of (dr.sections || [])) cnt += (s.items || []).length;
+    cnt += (dr.flashes || []).length;
+    document.getElementById('report-daily-meta').textContent =
+      (cnt > 0 ? `${dr.date} · ${cnt} 篇` : `${dr.date}`) + ' · 五版块 + 热点';
+  } else {
+    document.getElementById('report-daily-meta').textContent = '五版块 + 近期热点';
+  }
+  const iw = isoWeekBJ();
+  document.getElementById('report-weekly-meta').textContent =
+    `VOL.${iw.year}-W${String(iw.week).padStart(2, '0')} · 7 天脉络 + 精选`;
+  const nowBJ = new Date(Date.now() + 8 * 3600000);
+  document.getElementById('report-monthly-meta').textContent =
+    `${nowBJ.getUTCFullYear()}年${nowBJ.getUTCMonth()+1}月 · 30 期日报脉络`;
+
+  // ---- 切换器高亮 ----
+  document.querySelectorAll('.report-card').forEach(el => {
+    el.classList.toggle('active', el.dataset.view === name);
+  });
+
+  // ---- Footer ----
+  const genTime = fmtTime(new Date().toISOString());
+  const dailyUrl = (viewData.daily && viewData.daily.daily && viewData.daily.daily.report &&
+    viewData.daily.daily.report.links && viewData.daily.daily.report.links.aihot) || 'https://aihot.virxact.com/daily';
+  document.getElementById('footer-inner').innerHTML = `
+    <p>当前视图：<strong>${viewDef.label}</strong> · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报</a> · <a href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">官网周报</a> · <a href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">官网月报</a> · 热点：<a href="https://aihot.virxact.com/hot" target="_blank" rel="noopener noreferrer">AIHOT 热点</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+    <p style="margin-top:6px;font-size:12px">周报／月报由 AIHOT 日报归档的官方每日导语聚合而成 · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
+  `;
+
+  render();
+}
+
+async function loadView(name, force) {
+  if (viewData[name] && !force) { applyView(name); return; }
   document.getElementById('hero-date').textContent = '正在拉取数据...';
   document.getElementById('hero-date').classList.add('loading-text');
   document.getElementById('hero-total').textContent = '—';
   document.getElementById('main-content').innerHTML = '';
-  document.getElementById('footer-inner').innerHTML = '';
   document.getElementById('error-banner').classList.remove('show');
-}
-
-async function load() {
-  buildPage();
-  const dailyPromise = fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null);
-  const hotPromise = fetchJSON(`${API_BASE}/hot-topics`).catch(() => null);
-  const weeklyPromise = fetchJSON(`${API_BASE}/items?mode=selected&window=7d&limit=50`).catch(() => null);
-  const catPromises = SECTIONS.filter(s => !s.hot && !s.weekly).map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
-  const [daily, hot, weekly, ...catResults] = await Promise.all([dailyPromise, hotPromise, weeklyPromise, ...catPromises]);
-
-  let dateStr = '', windowStr = '', dailyUrl = 'https://aihot.virxact.com/daily';
-  if (daily && daily.report && daily.report.date) {
-    const d = daily.report.date;
-    dateStr = d;
-    dailyUrl = daily.report.links ? (daily.report.links.aihot || dailyUrl + '/' + d) : dailyUrl + '/' + d;
-    const ws = daily.report.windowStart ? new Date(daily.report.windowStart) : null;
-    const we = daily.report.windowEnd ? new Date(daily.report.windowEnd) : null;
-    if (ws && we) {
-      const bj = (utc) => { const t = new Date(utc.getTime() + 8*3600000); return `${t.getUTCFullYear()}年${t.getUTCMonth()+1}月${t.getUTCDate()}日 ${String(t.getUTCHours()).padStart(2,'0')}:00`; };
-      windowStr = `${bj(ws)} — ${bj(we)}（北京时间）`;
-    }
-  } else {
-    const now = new Date();
-    const bj = new Date(now.getTime() + 8*3600000);
-    dateStr = `${bj.getUTCFullYear()}-${String(bj.getUTCMonth()+1).padStart(2,'0')}-${String(bj.getUTCDate()).padStart(2,'0')}`;
-    windowStr = `${bj.getUTCFullYear()}年${bj.getUTCMonth()+1}月${bj.getUTCDate()}日（北京时间）`;
-    dailyUrl = `https://aihot.virxact.com/daily/${dateStr}`;
+  try {
+    viewData[name] = await fetchViewData(name);
+    applyView(name);
+  } catch (err) {
+    handleError(err);
   }
-
-  let globalNum = 0;
-  allItems = [];
-
-  const hotSection = SECTIONS.find(s => s.hot);
-  if (hotSection && hot && hot.items && hot.items.length) {
-    for (const item of hot.items.slice(0, 5)) {
-      globalNum++;
-      allItems.push({
-        item,
-        num: globalNum,
-        key: itemKey(item),
-        sectionId: hotSection.id,
-        rank: item.rank,
-        sourceCount: item.sourceCount,
-        signalCount: item.signalCount,
-      });
-    }
-  }
-
-  const nonHotSections = SECTIONS.filter(s => !s.hot && !s.weekly);
-  for (let i = 0; i < nonHotSections.length; i++) {
-    const sec = nonHotSections[i];
-    const result = catResults[i];
-    const items = result.items || [];
-    for (const item of items) {
-      globalNum++;
-      allItems.push({ item, num: globalNum, key: itemKey(item), sectionId: sec.id });
-    }
-  }
-
-  // 本周精选回顾：过去 7 天精选，排除已在上方今日版块出现过的条目
-  const weeklySection = SECTIONS.find(s => s.weekly);
-  if (weeklySection && weekly && weekly.items && weekly.items.length) {
-    const seen = new Set(allItems.map(x => x.key));
-    let wCount = 0;
-    for (const item of weekly.items) {
-      if (wCount >= WEEKLY_CAP) break;
-      const k = itemKey(item);
-      if (seen.has(k)) continue;
-      seen.add(k);
-      globalNum++;
-      allItems.push({ item, num: globalNum, key: k, sectionId: weeklySection.id });
-      wCount++;
-    }
-  }
-
-  document.title = `AI 日报 — ${dateStr}`;
-  document.getElementById('hero-date').textContent = windowStr || '数据加载中...';
-  document.getElementById('hero-date').classList.remove('loading-text');
-  document.getElementById('hero-total').textContent = globalNum;
-
-  // ==== 报告卡片：日报（动态）/ 周报 / 月报（官方网页入口）====
-  const dailyCard = document.getElementById('report-daily');
-  if (daily && daily.report) {
-    const r = daily.report;
-    if (r.links && r.links.aihot) dailyCard.href = r.links.aihot;
-    let cnt = 0;
-    for (const s of (r.sections || [])) cnt += (s.items || []).length;
-    cnt += (r.flashes || []).length;
-    document.getElementById('report-daily-meta').textContent =
-      cnt > 0 ? `${dateStr} · ${cnt} 篇 · 点击前往官网 →` : `${dateStr} · 点击前往官网 →`;
-  } else {
-    document.getElementById('report-daily-meta').textContent = '点击前往官网查看 →';
-  }
-  const iw = isoWeekBJ();
-  document.getElementById('report-weekly-meta').textContent =
-    `VOL.${iw.year}-W${String(iw.week).padStart(2, '0')} · 点击前往官网 →`;
-  const nowBJ = new Date(Date.now() + 8 * 3600000);
-  document.getElementById('report-monthly-meta').textContent =
-    `${nowBJ.getUTCFullYear()}年${nowBJ.getUTCMonth() + 1}月合订 · 点击前往官网 →`;
-
-  const genTime = fmtTime(new Date().toISOString());
-  document.getElementById('footer-inner').innerHTML = `
-    <p>共 <strong>${globalNum}</strong> 条精选资讯与热点 · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报 (${dateStr})</a> · <a href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">AIHOT 周报</a> · <a href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">AIHOT 月报</a> · 热点：<a href="https://aihot.virxact.com/hot" target="_blank" rel="noopener noreferrer">AIHOT 热点</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
-    <p style="margin-top:6px;font-size:12px">AIHOT v1 API + Open-Meteo · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
-  `;
-
-  render();
 }
 
 // ===== Scroll spy =====
@@ -1313,6 +1445,15 @@ function initScrollSpy() {
 
 // ===== Events =====
 document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+document.getElementById('reports-grid').addEventListener('click', (e) => {
+  const btn = e.target.closest('.report-card');
+  if (!btn) return;
+  const name = btn.dataset.view;
+  if (name === view) return;
+  loadView(name);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 document.getElementById('search-input').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
@@ -1350,7 +1491,7 @@ function handleError(err) {
 // ===== Init =====
 applyTheme();
 loadWeather();
-load().catch(handleError);
+loadView(view).catch(handleError);
 
 })();
 </script>
