@@ -178,6 +178,72 @@
   .stat-item .stat-num { font-size: 24px; font-weight: 700; line-height: 1.2; }
   .stat-item .stat-label { font-size: 12px; opacity: 0.75; margin-top: 2px; }
 
+  /* ===== Official report cards (日报 / 周报 / 月报) ===== */
+  .reports {
+    max-width: 1100px;
+    margin: -30px auto 0;
+    padding: 0 20px;
+    position: relative;
+    z-index: 5;
+  }
+  .reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .report-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  }
+  .report-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
+  }
+  .report-icon {
+    width: 44px; height: 44px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 21px;
+    flex-shrink: 0;
+  }
+  .report-icon.daily   { background: #eef0ff; }
+  .report-icon.weekly  { background: #e6f6ec; }
+  .report-icon.monthly { background: #fff2e0; }
+  [data-theme="dark"] .report-icon.daily   { background: #2a2e4a; }
+  [data-theme="dark"] .report-icon.weekly  { background: #1e3a2a; }
+  [data-theme="dark"] .report-icon.monthly { background: #3a2e1a; }
+  .report-body { flex: 1; min-width: 0; }
+  .report-type {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.6px;
+  }
+  .report-title {
+    font-size: 15px; font-weight: 600;
+    color: var(--text);
+    margin: 2px 0 3px;
+    line-height: 1.4;
+  }
+  .report-meta { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  .report-arrow {
+    color: var(--text-muted);
+    font-size: 15px;
+    flex-shrink: 0;
+    transition: color 0.18s;
+  }
+  .report-card:hover .report-arrow { color: var(--accent); }
+
   /* ===== Nav + Toolbar ===== */
   .nav {
     position: sticky;
@@ -267,6 +333,13 @@
   }
   .section-header h2 { font-size: 20px; font-weight: 700; }
   .section-header .section-count { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+  .section-header .section-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: auto;
+    font-weight: 400;
+    text-align: right;
+  }
 
   .cards {
     display: grid;
@@ -573,6 +646,10 @@
     .stat-item .stat-num { font-size: 20px; }
     .cards { grid-template-columns: 1fr; }
     .main { padding: 24px 12px 36px; }
+    .reports { margin-top: -22px; padding: 0 12px; }
+    .reports-grid { grid-template-columns: 1fr; gap: 10px; }
+    .section-header { flex-wrap: wrap; }
+    .section-header .section-note { margin-left: 0; width: 100%; text-align: left; }
     .nav a { padding: 10px 14px; font-size: 13px; }
     .weather-now { gap: 14px; }
     .weather-icon { font-size: 40px; }
@@ -618,6 +695,39 @@
     <div class="total" id="hero-total">—</div>
     <div class="total-label">条精选资讯</div>
     <div class="stats-bar" id="hero-stats"></div>
+  </div>
+</div>
+
+<!-- Official reports: 日报 / 周报 / 月报 -->
+<div class="reports">
+  <div class="reports-grid">
+    <a class="report-card" id="report-daily" href="https://aihot.virxact.com/daily" target="_blank" rel="noopener noreferrer">
+      <div class="report-icon daily">📅</div>
+      <div class="report-body">
+        <div class="report-type">AIHOT 官方</div>
+        <div class="report-title">AI 日报</div>
+        <div class="report-meta" id="report-daily-meta">加载中...</div>
+      </div>
+      <div class="report-arrow">→</div>
+    </a>
+    <a class="report-card" id="report-weekly" href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">
+      <div class="report-icon weekly">📆</div>
+      <div class="report-body">
+        <div class="report-type">AIHOT 官方</div>
+        <div class="report-title">AI 周报</div>
+        <div class="report-meta" id="report-weekly-meta">点击前往官网查看 →</div>
+      </div>
+      <div class="report-arrow">↗</div>
+    </a>
+    <a class="report-card" id="report-monthly" href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">
+      <div class="report-icon monthly">🗓️</div>
+      <div class="report-body">
+        <div class="report-type">AIHOT 官方</div>
+        <div class="report-title">AI 月报</div>
+        <div class="report-meta" id="report-monthly-meta">点击前往官网查看 →</div>
+      </div>
+      <div class="report-arrow">↗</div>
+    </a>
   </div>
 </div>
 
@@ -769,6 +879,17 @@ function fmtTime(iso) {
 
 function getTime(entry) { return entry.latestAt || entry.publishedAt || entry.discoveredAt; }
 
+// ISO 8601 周序号（按北京时间计算），用于周报卡片标签
+function isoWeekBJ() {
+  const d = new Date(Date.now() + 8 * 3600000);
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const dayNum = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
+  return { year: t.getUTCFullYear(), week: week };
+}
+
 function truncate(str, max) {
   if (!str) return '';
   return str.length > max ? str.slice(0, max).replace(/\s+$/,'') + '...' : str;
@@ -841,6 +962,7 @@ const SECTIONS = [
   { id: 'industry', label: '行业动态', cat: 'industry' },
   { id: 'papers', label: '论文研究', cat: 'paper', fallback: true },
   { id: 'tips', label: '技巧与观点', cat: 'tip' },
+  { id: 'weekly', label: '本周精选回顾', weekly: true },
 ];
 
 async function fetchCategory(cat, fallbackMode) {
@@ -917,8 +1039,9 @@ function render() {
     shown += cards.length;
     navHTML += `<a href="#section-${sec.id}">${sec.label} (${cards.length})</a>`;
     statsHTML += `<div class="stat-item"><div class="stat-num">${cards.length}</div><div class="stat-label">${sec.label}</div></div>`;
+    const noteHTML = sec.weekly ? `<span class="section-note">过去 7 天精选 · 已排除上方今日条目</span>` : '';
     mainHTML += `<section class="section" id="section-${sec.id}">
-      <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${cards.length} 条</span></div>`;
+      <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${cards.length} 条</span>${noteHTML}</div>`;
     if (cards.length === 0) mainHTML += `<div class="empty-section">暂无数据</div>`;
     else mainHTML += `<div class="cards">${cards.map(cardHTML).join('')}</div>`;
     mainHTML += `</section>`;
@@ -1059,8 +1182,9 @@ async function load() {
   buildPage();
   const dailyPromise = fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null);
   const hotPromise = fetchJSON(`${API_BASE}/hot-topics`).catch(() => null);
-  const catPromises = SECTIONS.filter(s => !s.hot).map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
-  const [daily, hot, ...catResults] = await Promise.all([dailyPromise, hotPromise, ...catPromises]);
+  const weeklyPromise = fetchJSON(`${API_BASE}/items?mode=selected&window=7d&limit=30`).catch(() => null);
+  const catPromises = SECTIONS.filter(s => !s.hot && !s.weekly).map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [], note: '加载失败' })));
+  const [daily, hot, weekly, ...catResults] = await Promise.all([dailyPromise, hotPromise, weeklyPromise, ...catPromises]);
 
   let dateStr = '', windowStr = '', dailyUrl = 'https://aihot.virxact.com/daily';
   if (daily && daily.report && daily.report.date) {
@@ -1100,7 +1224,7 @@ async function load() {
     }
   }
 
-  const nonHotSections = SECTIONS.filter(s => !s.hot);
+  const nonHotSections = SECTIONS.filter(s => !s.hot && !s.weekly);
   for (let i = 0; i < nonHotSections.length; i++) {
     const sec = nonHotSections[i];
     const result = catResults[i];
@@ -1111,14 +1235,47 @@ async function load() {
     }
   }
 
+  // 本周精选回顾：过去 7 天精选，排除已在上方今日版块出现过的条目
+  const weeklySection = SECTIONS.find(s => s.weekly);
+  if (weeklySection && weekly && weekly.items && weekly.items.length) {
+    const seen = new Set(allItems.map(x => x.key));
+    for (const item of weekly.items) {
+      const k = itemKey(item);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      globalNum++;
+      allItems.push({ item, num: globalNum, key: k, sectionId: weeklySection.id });
+    }
+  }
+
   document.title = `AI 日报 — ${dateStr}`;
   document.getElementById('hero-date').textContent = windowStr || '数据加载中...';
   document.getElementById('hero-date').classList.remove('loading-text');
   document.getElementById('hero-total').textContent = globalNum;
 
+  // ==== 报告卡片：日报（动态）/ 周报 / 月报（官方网页入口）====
+  const dailyCard = document.getElementById('report-daily');
+  if (daily && daily.report) {
+    const r = daily.report;
+    if (r.links && r.links.aihot) dailyCard.href = r.links.aihot;
+    let cnt = 0;
+    for (const s of (r.sections || [])) cnt += (s.items || []).length;
+    cnt += (r.flashes || []).length;
+    document.getElementById('report-daily-meta').textContent =
+      cnt > 0 ? `${dateStr} · ${cnt} 篇 · 点击前往官网 →` : `${dateStr} · 点击前往官网 →`;
+  } else {
+    document.getElementById('report-daily-meta').textContent = '点击前往官网查看 →';
+  }
+  const iw = isoWeekBJ();
+  document.getElementById('report-weekly-meta').textContent =
+    `VOL.${iw.year}-W${String(iw.week).padStart(2, '0')} · 点击前往官网 →`;
+  const nowBJ = new Date(Date.now() + 8 * 3600000);
+  document.getElementById('report-monthly-meta').textContent =
+    `${nowBJ.getUTCFullYear()}年${nowBJ.getUTCMonth() + 1}月合订 · 点击前往官网 →`;
+
   const genTime = fmtTime(new Date().toISOString());
   document.getElementById('footer-inner').innerHTML = `
-    <p>共 <strong>${globalNum}</strong> 条精选资讯与热点 · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报 (${dateStr})</a> · 热点：<a href="https://aihot.virxact.com/hot" target="_blank" rel="noopener noreferrer">AIHOT 热点</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+    <p>共 <strong>${globalNum}</strong> 条精选资讯与热点 · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报 (${dateStr})</a> · <a href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">AIHOT 周报</a> · <a href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">AIHOT 月报</a> · 热点：<a href="https://aihot.virxact.com/hot" target="_blank" rel="noopener noreferrer">AIHOT 热点</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
     <p style="margin-top:6px;font-size:12px">AIHOT v1 API + Open-Meteo · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
   `;
 
