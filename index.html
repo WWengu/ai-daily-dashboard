@@ -517,8 +517,49 @@
     margin: 22px 0 12px;
     padding-left: 2px;
     letter-spacing: 0.3px;
+    scroll-margin-top: 120px;
   }
   .timeline-group-title:first-child { margin-top: 0; }
+
+  /* ===== 月报：统计条 + 分周看点 ===== */
+  .m-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .m-stat {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .m-stat-num { font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1.2; }
+  .m-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .hl-list { display: flex; flex-direction: column; gap: 10px; }
+  .hl-item {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+  .hl-item:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateX(2px); }
+  .hl-num {
+    font-size: 20px; font-weight: 800; color: var(--accent);
+    width: 34px; flex-shrink: 0; opacity: 0.9;
+  }
+  .hl-body { flex: 1; min-width: 0; }
+  .hl-week { font-size: 12px; color: var(--accent); font-weight: 700; margin-bottom: 3px; }
+  .hl-title { font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.55; }
+  .hl-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
   .empty-section {
     padding: 24px;
@@ -744,6 +785,11 @@
     .modal-title { font-size: 16px; }
     .timeline { padding-left: 24px; }
     .timeline-item::before { left: -20px; }
+    .m-stats { gap: 8px; }
+    .m-stat { padding: 12px 6px; }
+    .m-stat-num { font-size: 20px; }
+    .hl-item { gap: 12px; padding: 12px 14px; }
+    .hl-num { font-size: 17px; width: 28px; }
   }
 
   html { scroll-behavior: smooth; scroll-padding-top: 100px; }
@@ -1066,6 +1112,7 @@ const VIEWS = {
     badge: 'AIHOT 本月脉络 · 官方每日导语',
     totalLabel: '天官方头条',
     sections: [
+      { id: 'm-highlights', label: '本期看点', highlights: true },
       { id: 'm-thread', label: '本月脉络', thread: true, groupByWeek: true },
     ],
   },
@@ -1095,6 +1142,21 @@ function parseThread(d) {
       url: (x.links && x.links.aihot) || `https://aihot.virxact.com/daily/${x.date}`,
     }))
     .filter(x => x.date && x.title);
+}
+
+// 按 ISO 周分组（threadData 本身按日期倒序），返回最新周在前
+function groupThreadByWeek(rows) {
+  const groups = {};
+  for (const r of rows) {
+    const iw = isoWeekOf(r.date);
+    const k = `${iw.year}-W${String(iw.week).padStart(2, '0')}`;
+    (groups[k] = groups[k] || []).push(r);
+  }
+  return Object.keys(groups).sort().reverse().map(k => ({
+    key: k,
+    week: k.split('-W')[1],
+    days: groups[k],
+  }));
 }
 
 // Global state
@@ -1167,7 +1229,37 @@ function render() {
   let navHTML = '', statsHTML = '', mainHTML = '', shown = 0;
 
   for (const sec of viewDef.sections) {
-    if (sec.thread) {
+    if (sec.highlights) {
+      // 月报「本期看点」：官方月报同款结构（统计条 + 编号看点），按周提炼
+      const rows = visibleThread();
+      if (rows.length === 0 && isFiltered) continue;
+      const weeks = groupThreadByWeek(rows);
+      shown += weeks.length;
+      navHTML += `<a href="#section-${sec.id}">${sec.label} (${weeks.length})</a>`;
+      statsHTML += `<div class="stat-item"><div class="stat-num">${weeks.length}</div><div class="stat-label">${sec.label}</div></div>`;
+
+      const bodyHTML = weeks.length === 0
+        ? `<div class="empty-section">暂无数据</div>`
+        : `<div class="m-stats">
+            <div class="m-stat"><div class="m-stat-num">${rows.length}</div><div class="m-stat-label">天官方脉络</div></div>
+            <div class="m-stat"><div class="m-stat-num">${weeks.length}</div><div class="m-stat-label">周看点</div></div>
+            <div class="m-stat"><div class="m-stat-num">${rows.length}</div><div class="m-stat-label">期日报汇聚</div></div>
+          </div>
+          <div class="hl-list">${weeks.map((w, i) => `
+            <button class="hl-item" type="button" data-week="${w.key}">
+              <div class="hl-num">${String(i + 1).padStart(2, '0')}</div>
+              <div class="hl-body">
+                <div class="hl-week">第 ${w.week} 周 · ${w.days[w.days.length - 1].date} ~ ${w.days[0].date}</div>
+                <div class="hl-title">${w.days[0].title}</div>
+                <div class="hl-meta">${w.days.length} 天脉络 · 点击定位该周详情 →</div>
+              </div>
+            </button>`).join('')}</div>`;
+
+      mainHTML += `<section class="section" id="section-${sec.id}">
+        <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${weeks.length} 周</span><span class="section-note">按周提炼头条 · 点击定位该周脉络</span></div>
+        ${bodyHTML}
+      </section>`;
+    } else if (sec.thread) {
       const rows = visibleThread();
       if (rows.length === 0 && isFiltered) continue;
       shown += rows.length;
@@ -1178,17 +1270,10 @@ function render() {
       if (rows.length === 0) {
         bodyHTML = `<div class="empty-section">暂无数据</div>`;
       } else if (sec.groupByWeek) {
-        const groups = {};
-        for (const r of rows) {
-          const iw = isoWeekOf(r.date);
-          const k = `${iw.year}-W${String(iw.week).padStart(2, '0')}`;
-          (groups[k] = groups[k] || []).push(r);
-        }
-        bodyHTML = '<div class="timeline">' + Object.keys(groups).sort().reverse().map(k => {
-          const wk = k.split('-W')[1];
-          const last = groups[k][0], first = groups[k][groups[k].length - 1];
-          return `<div class="timeline-group-title">第 ${wk} 周 · ${first.date} ~ ${last.date} · ${groups[k].length} 天</div>` +
-            groups[k].map(threadItemHTML).join('');
+        bodyHTML = '<div class="timeline">' + groupThreadByWeek(rows).map(w => {
+          const first = w.days[w.days.length - 1], last = w.days[0];
+          return `<div class="timeline-group-title" id="week-${w.key}">第 ${w.week} 周 · ${first.date} ~ ${last.date} · ${w.days.length} 天</div>` +
+            w.days.map(threadItemHTML).join('');
         }).join('') + '</div>';
       } else {
         bodyHTML = `<div class="timeline">${rows.map(threadItemHTML).join('')}</div>`;
@@ -1253,6 +1338,13 @@ function bindCards() {
       e.preventDefault();
       const row = threadData.find(x => x.date === el.dataset.date);
       if (row) openThreadModal(row);
+    });
+  });
+  // 月报看点：点击平滑定位到该周的脉络分组
+  document.querySelectorAll('.hl-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = document.getElementById('week-' + btn.dataset.week);
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 }
