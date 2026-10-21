@@ -1432,6 +1432,15 @@ const DEFAULT_CITY = '广州';
 const LS_KEY_CITY = 'ai-daily-city';
 
 // ===== Helpers =====
+// 把 [data-icon="xxx"] 占位替换成 ICONS 里的 SVG。可重复调用（已注入的跳过）。
+function hydrateIcons(root) {
+  (root || document).querySelectorAll('[data-icon]').forEach(el => {
+    if (el.firstChild) return;
+    const key = el.dataset.icon;
+    if (ICONS[key]) el.innerHTML = ICONS[key];
+  });
+}
+
 function itemKey(item) {
   const links = item.links || {};
   return links.aihot || links.original || (item.title + '|' + (item.source ? item.source.name : ''));
@@ -1454,13 +1463,7 @@ function applyTheme() {
 function toggleTheme() {
   theme = theme === 'light' ? 'dark' : 'light';
   LS.set(LS_THEME, theme);
-  
-// 填充静态 HTML 中的 data-icon 占位
-document.querySelectorAll('[data-icon]').forEach(el => {
-  const key = el.dataset.icon;
-  if (ICONS[key]) el.innerHTML = ICONS[key];
-});
-applyTheme();
+  applyTheme();
 }
 
 function weatherInfo(code) {
@@ -1546,6 +1549,7 @@ async function loadWeather() {
     </div>
     <div id="weather-body"><div class="weather-loading">正在加载天气...</div></div>
   `;
+  hydrateIcons(weatherEl);
   document.getElementById('city-select').addEventListener('change', (e) => {
     saveCity(e.target.value); loadWeather();
   });
@@ -2188,6 +2192,7 @@ function handleError(err) {
 }
 
 // ===== Init =====
+hydrateIcons();
 applyTheme();
 loadWeather();
 loadView(view).catch(handleError);
