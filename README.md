@@ -80,7 +80,7 @@ python3 -m http.server 3001
 
 ```
 .
-├── index.html    # 全部代码（单文件，约 60KB）
+├── index.html    # 全部代码（单文件，约 73KB）
 └── README.md
 ```
 
@@ -90,7 +90,8 @@ python3 -m http.server 3001
 
 | 版本 | 说明 |
 |---|---|
-| **v1.3** | 日报/周报/月报三视图切换；周报/月报基于日报归档官方导语；时间线点击弹当日日报概览；月报官方版式（统计条 + 编号看点） |
+| **v1.4** | 按 web-design-baseline 重做视觉系统：图标全部改内联 SVG（25 个）、设计 token 规范化、浅色描边优先阴影、数字等宽、prefers-reduced-motion；修复 fetch 的 User-Agent 头触发 CORS 预检被拒 |
+| v1.3 | 日报/周报/月报三视图切换；周报/月报基于日报归档官方导语；时间线点击弹当日日报概览；月报官方版式（统计条 + 编号看点） |
 | v1.2 | 近期热点头条区、深色模式、收藏、已读标记、搜索与版块筛选、弹窗双按钮 |
 
 回退某个版本：`gh release view <tag>` 查看，或 `git reset --hard <tag>` 后强推。
