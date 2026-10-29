@@ -1544,9 +1544,10 @@ function toggleTheme() {
           ],
         },
         {
-          duration: 500,
-          // 快起慢收：前段迅速铺开、后段柔和收尾，主观更跟手
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          // 时长放慢、曲线回到两端平缓的分布：
+          // 扩散边界匀速可追踪，比快起慢收更"顺"（后者只是显快）
+          duration: 680,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
           pseudoElement: '::view-transition-new(root)',
         }
       );
