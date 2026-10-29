@@ -72,6 +72,11 @@
     transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
   }
 
+  /* 圆形扩散转场期间关闭 body 自身的颜色过渡，避免新快照捕获到过渡起始帧 */
+  html:active-view-transition body {
+    transition: none;
+  }
+
   body.modal-open { overflow: hidden; }
 
   a { color: var(--accent); text-decoration: none; }
@@ -1166,6 +1171,23 @@
   .error-banner.show { display: block; }
 
   /* ===== Animations ===== */
+  /* ===== Theme switch: circular reveal from the toggle button ===== */
+  /* 关闭默认的交叉淡入，改由 clip-path 圆形扩散承载转场 */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-old(root) { z-index: 1; }
+  ::view-transition-new(root) { z-index: 2; }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none !important;
+    }
+  }
+
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -1460,10 +1482,60 @@ function applyTheme() {
   const btn = document.getElementById('theme-toggle');
   if (btn) btn.innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
 }
+let themeSwitching = false;
+
 function toggleTheme() {
-  theme = theme === 'light' ? 'dark' : 'light';
-  LS.set(LS_THEME, theme);
-  applyTheme();
+  const next = theme === 'light' ? 'dark' : 'light';
+
+  // 主题状态变更（与改造前完全一致，不做任何改动）
+  const commit = () => {
+    theme = next;
+    LS.set(LS_THEME, theme);
+    applyTheme();
+  };
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 不支持 View Transitions / 用户偏好减少动效 / 上一次转场未结束 → 直接切换
+  if (!document.startViewTransition || reduceMotion || themeSwitching) {
+    commit();
+    return;
+  }
+
+  // 扩散原点：切换按钮的几何中心（用 rect 而非事件坐标，键盘触发同样有正确原点）
+  const btn = document.getElementById('theme-toggle');
+  const rect = btn ? btn.getBoundingClientRect() : null;
+  const ox = rect ? rect.left + rect.width / 2 : window.innerWidth - 37;
+  const oy = rect ? rect.top + rect.height / 2 : 37;
+  // 半径取到最远角的距离，确保圆能盖满整个视口
+  const radius = Math.hypot(
+    Math.max(ox, window.innerWidth - ox),
+    Math.max(oy, window.innerHeight - oy)
+  );
+
+  themeSwitching = true;
+  try {
+    const vt = document.startViewTransition(commit);
+    vt.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${ox}px ${oy}px)`,
+            `circle(${radius}px at ${ox}px ${oy}px)`,
+          ],
+        },
+        {
+          duration: 500,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          pseudoElement: '::view-transition-new(root)',
+        }
+      );
+    }).catch(() => {});
+    vt.finished.catch(() => {}).finally(() => { themeSwitching = false; });
+  } catch (e) {
+    themeSwitching = false;
+    commit();
+  }
 }
 
 function weatherInfo(code) {
