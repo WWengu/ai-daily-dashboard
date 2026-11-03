@@ -1621,6 +1621,32 @@ async function fetchJSON(url) {
   return resp.json();
 }
 
+// ===== 数据源健康度 =====
+// 接口失败都被 .catch 吞掉了，页面看起来只是"今天没数据"。
+// 这里记录失败次数：全部失败时给出可见提示，避免把"接口挂了"误读成"没新闻"。
+let srcAttempts = 0;
+let srcFailures = 0;
+
+function trackFetch(promise) {
+  srcAttempts++;
+  return promise.catch(() => { srcFailures++; return null; });
+}
+
+function resetSourceHealth() { srcAttempts = 0; srcFailures = 0; }
+
+function checkSourceHealth() {
+  const banner = document.getElementById('error-banner');
+  if (!banner) return;
+  if (srcAttempts > 0 && srcFailures === srcAttempts) {
+    banner.innerHTML =
+      '<strong>数据源暂时不可用</strong> · AIHOT 接口可能已变更或网络异常，下方内容为空。天气数据不受影响。 ' +
+      '<a href="#" onclick="location.reload();return false;" style="color:var(--accent);font-weight:500">刷新重试</a>';
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
 // ===== Weather =====
 function getSavedCity() {
   try { const s = localStorage.getItem(LS_KEY_CITY); if (s && CITIES[s]) return s; } catch(e) {}
@@ -2080,21 +2106,21 @@ async function fetchViewData(name) {
   if (name === 'daily') {
     const cats = VIEWS.daily.sections.filter(s => !s.hot);
     const [daily, hot, ...catResults] = await Promise.all([
-      fetchJSON(`${API_BASE}/dailies/latest`).catch(() => null),
-      fetchJSON(`${API_BASE}/hot-topics`).catch(() => null),
-      ...cats.map(s => fetchCategory(s.cat, s.fallback).catch(() => ({ items: [] }))),
+      trackFetch(fetchJSON(`${API_BASE}/dailies/latest`)),
+      trackFetch(fetchJSON(`${API_BASE}/hot-topics`)),
+      ...cats.map(s => trackFetch(fetchCategory(s.cat, s.fallback)).then(r => r || { items: [] })),
     ]);
     return { daily, hot, cats, catResults };
   }
   if (name === 'weekly') {
     const [thread, picks] = await Promise.all([
-      fetchJSON(`${API_BASE}/dailies?limit=7`).catch(() => null),
-      fetchJSON(`${API_BASE}/items?mode=selected&window=7d&limit=50`).catch(() => null),
+      trackFetch(fetchJSON(`${API_BASE}/dailies?limit=7`)),
+      trackFetch(fetchJSON(`${API_BASE}/items?mode=selected&window=7d&limit=50`)),
     ]);
     return { thread: parseThread(thread), picks: (picks && picks.items) || [] };
   }
   // monthly
-  const thread = await fetchJSON(`${API_BASE}/dailies?limit=30`).catch(() => null);
+  const thread = await trackFetch(fetchJSON(`${API_BASE}/dailies?limit=30`));
   return { thread: parseThread(thread) };
 }
 
@@ -2208,9 +2234,11 @@ async function loadView(name, force) {
   document.getElementById('hero-total').textContent = '—';
   document.getElementById('main-content').innerHTML = '';
   document.getElementById('error-banner').classList.remove('show');
+  resetSourceHealth();
   try {
     viewData[name] = await fetchViewData(name);
     applyView(name);
+    checkSourceHealth();
   } catch (err) {
     handleError(err);
   }
