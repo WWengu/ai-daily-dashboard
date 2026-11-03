@@ -1400,7 +1400,7 @@
 <script>
 (function() {
 
-const API_BASE = 'https://aihot.virxact.com/api/v1';
+const API_BASE = 'https://aihot.news/api/v1';
 
 // ===== 内联 SVG 图标（web-design-baseline：不用 emoji 当图标）=====
 const SVG_ATTR = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
@@ -1734,7 +1734,7 @@ function parseThread(d) {
     .map(x => ({
       date: x.date,
       title: x.leadTitle || '',
-      url: (x.links && x.links.aihot) || `https://aihot.virxact.com/daily/${x.date}`,
+      url: (x.links && x.links.aihot) || `https://aihot.news/daily/${x.date}`,
     }))
     .filter(x => x.date && x.title);
 }
@@ -1875,8 +1875,8 @@ function render() {
       }
 
       const officialLink = view === 'weekly'
-        ? `<a href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">AIHOT 官方周报 ↗</a>`
-        : `<a href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">AIHOT 官方月报 ↗</a>`;
+        ? `<a href="https://aihot.news/weekly" target="_blank" rel="noopener noreferrer">AIHOT 官方周报 ↗</a>`
+        : `<a href="https://aihot.news/monthly" target="_blank" rel="noopener noreferrer">AIHOT 官方月报 ↗</a>`;
       mainHTML += `<section class="section" id="section-${sec.id}">
         <div class="section-header"><h2>${sec.label}</h2><span class="section-count">${rows.length} 天</span><span class="section-note">AIHOT 官方每日头条 · ${officialLink}</span></div>
         ${bodyHTML}
@@ -2192,9 +2192,9 @@ function applyView(name) {
   // ---- Footer ----
   const genTime = fmtTime(new Date().toISOString());
   const dailyUrl = (viewData.daily && viewData.daily.daily && viewData.daily.daily.report &&
-    viewData.daily.daily.report.links && viewData.daily.daily.report.links.aihot) || 'https://aihot.virxact.com/daily';
+    viewData.daily.daily.report.links && viewData.daily.daily.report.links.aihot) || 'https://aihot.news/daily';
   document.getElementById('footer-inner').innerHTML = `
-    <p>当前视图：<strong>${viewDef.label}</strong> · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报</a> · <a href="https://aihot.virxact.com/weekly" target="_blank" rel="noopener noreferrer">官网周报</a> · <a href="https://aihot.virxact.com/monthly" target="_blank" rel="noopener noreferrer">官网月报</a> · 热点：<a href="https://aihot.virxact.com/hot" target="_blank" rel="noopener noreferrer">AIHOT 热点</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+    <p>当前视图：<strong>${viewDef.label}</strong> · AI 数据：<a href="${dailyUrl}" target="_blank" rel="noopener noreferrer">AIHOT 日报</a> · <a href="https://aihot.news/weekly" target="_blank" rel="noopener noreferrer">官网周报</a> · <a href="https://aihot.news/monthly" target="_blank" rel="noopener noreferrer">官网月报</a> · 热点：<a href="https://aihot.news/hot" target="_blank" rel="noopener noreferrer">AIHOT 热点</a> · 天气：<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
     <p style="margin-top:6px;font-size:12px">周报／月报由 AIHOT 日报归档的官方每日导语聚合而成 · 页面生成时间：${genTime}（北京时间）· 数据实时拉取，每次刷新即最新</p>
   `;
 

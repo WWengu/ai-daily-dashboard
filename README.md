@@ -1,6 +1,6 @@
 # AI Daily Dashboard · 日报 / 周报 / 月报
 
-基于 [AIHOT](https://aihot.virxact.com) 公开 API 的 AI 资讯仪表盘。**单文件 HTML，无框架、无构建、无外部依赖**，数据在浏览器端实时拉取。
+基于 [AIHOT](https://aihot.news) 公开 API 的 AI 资讯仪表盘。**单文件 HTML，无框架、无构建、无外部依赖**，数据在浏览器端实时拉取。
 
 **在线访问**：https://wwengu.github.io/ai-daily-dashboard/
 
