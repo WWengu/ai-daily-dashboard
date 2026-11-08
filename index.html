@@ -23,7 +23,8 @@
     /* Ink scale */
     --ink: #171717;
     --body: #4d4d4d;
-    --mute: #888888;
+    /* #888 在白底仅 3.54:1，达不到 4.5:1；#6b6b6b 为 5.33:1 */
+    --mute: #6b6b6b;
     --on-primary: #ffffff;
 
     /* Semantic */
@@ -65,9 +66,10 @@
   }
 
   [data-theme="dark"] {
-    --canvas: #000000;
-    --canvas-soft: #0a0a0a;
-    --canvas-soft-2: #111111;
+    /* 层级必须正向：页面最暗 < 卡片 < 内嵌块 */
+    --canvas: #111111;
+    --canvas-soft: #000000;
+    --canvas-soft-2: #1c1c1c;
     --hairline: #333333;
     --hairline-strong: #666666;
 
@@ -608,9 +610,13 @@
   }
   .card:hover { box-shadow: var(--e3); }
 
-  .card.read { opacity: 0.55; }
-  .card.read:hover { opacity: 0.8; }
-  .card.read .card-title { color: var(--body); }
+  /* 已读：用底色与描边降权，不用整卡 opacity（那会把摘要压到 2.71:1） */
+  .card.read {
+    background: var(--canvas-soft);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+  .card.read:hover { box-shadow: var(--e2); }
+  .card.read .card-title { color: var(--body); font-weight: 400; }
 
   .card.fav { box-shadow: inset 0 0 0 1px var(--ink), 0 1px 1px rgba(0, 0, 0, 0.02), 0 2px 2px rgba(0, 0, 0, 0.04); }
 
@@ -636,7 +642,7 @@
     height: 26px;
     border-radius: var(--r-xs);
     cursor: pointer;
-    color: var(--hairline-strong);
+    color: var(--mute);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1263,7 +1269,13 @@
     .hero .total { font-size: 34px; }
     .hero .date-range { font-size: 15px; }
     .reports { padding: var(--s-lg) var(--s-md) 0; }
-    .nav { margin-top: var(--s-lg); }
+    /* 移动端关闭毛玻璃：滚动时每帧重新合成，是主要卡顿源 */
+    .nav {
+      margin-top: var(--s-lg);
+      background: var(--canvas);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
     .nav-inner { padding: 0 var(--s-md); }
     .main { padding: var(--s-xl) var(--s-md) var(--s-3xl); }
     .section { margin-bottom: var(--s-2xl); }
@@ -1364,7 +1376,7 @@
 <nav class="nav" id="nav">
   <div class="nav-inner" id="nav-inner"></div>
   <div class="toolbar">
-    <input type="search" id="search-input" class="search-input" placeholder="搜索标题 / 摘要 / 来源...">
+    <input type="search" id="search-input" class="search-input" placeholder="搜索标题 / 摘要 / 来源..." aria-label="搜索资讯标题、摘要或来源">
     <div class="filter-chips" id="filter-chips">
       <button class="filter-chip active" data-filter="all">全部</button>
       <button class="filter-chip" data-filter="favorites"><span data-icon="star"></span>收藏</button>
@@ -1806,7 +1818,8 @@ function cardHTML(entry) {
   const fav = isFav(entry.key);
   const rd = isRead(entry.key);
   const hotLine = entry.rank ? `<div class="card-hotline">${ICONS.flame} #${entry.rank} · ${entry.sourceCount || 0} 个信源在聊</div>` : '';
-  return `<div class="card ${rd ? 'read' : ''} ${fav ? 'fav' : ''}" data-num="${entry.num}">
+  const titleAttr = String(item.title).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return `<div class="card ${rd ? 'read' : ''} ${fav ? 'fav' : ''}" data-num="${entry.num}" role="button" tabindex="0" aria-label="${titleAttr}">
     <div class="card-num">${entry.num}</div>
     <button class="card-fav ${fav ? 'on' : ''}" aria-label="收藏">${fav ? ICONS.starFilled : ICONS.star}</button>
     <div class="card-title">${item.title}</div>
@@ -1952,10 +1965,18 @@ function render() {
 
 function bindCards() {
   document.querySelectorAll('.card').forEach(el => {
-    el.addEventListener('click', () => {
+    const openCard = () => {
       const num = parseInt(el.dataset.num, 10);
       const entry = allItems.find(x => x.num === num);
       if (entry) openModal(entry);
+    };
+    el.addEventListener('click', openCard);
+    // role="button" 不会自带激活行为，需自行实现 Enter / Space
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        openCard();
+      }
     });
   });
   document.querySelectorAll('.card-fav').forEach(btn => {
@@ -1984,6 +2005,24 @@ function bindCards() {
 }
 
 // ===== Modal =====
+// 弹窗焦点管理：记住触发元素 → 聚焦关闭按钮 → 关闭时还原
+// 注意：openModal 里会 render() 重建卡片，原元素会被销毁，
+// 所以同时记住序号，关闭时按选择器重新定位到重建后的卡片。
+let modalReturnFocus = null;
+let modalReturnSelector = null;
+
+function showModalShell() {
+  const el = document.activeElement;
+  modalReturnFocus = el;
+  modalReturnSelector = (el && el.dataset && el.dataset.num)
+    ? `.card[data-num="${el.dataset.num}"]`
+    : null;
+  document.getElementById('modal-backdrop').classList.add('show');
+  document.body.classList.add('modal-open');
+  const closeBtn = document.getElementById('modal-close');
+  if (closeBtn) closeBtn.focus();
+}
+
 function openModal(entry) {
   const item = entry.item;
   const time = fmtTime(getTime(item));
@@ -2048,8 +2087,7 @@ function openModal(entry) {
   if (originalUrl) { cta.href = originalUrl; cta.classList.remove('disabled'); cta.textContent = '查看原文 →'; }
   else { cta.removeAttribute('href'); cta.classList.add('disabled'); cta.textContent = '暂无原文'; }
 
-  document.getElementById('modal-backdrop').classList.add('show');
-  document.body.classList.add('modal-open');
+  showModalShell();
 
   if (!isRead(entry.key)) { markRead(entry.key); render(); }
 }
@@ -2073,8 +2111,7 @@ function openThreadModal(row) {
   cta.classList.remove('disabled');
   cta.textContent = '打开完整日报 →';
 
-  document.getElementById('modal-backdrop').classList.add('show');
-  document.body.classList.add('modal-open');
+  showModalShell();
 
   fetchJSON(`${API_BASE}/dailies/${row.date}`).then(d => {
     const r = (d && d.report) || {};
@@ -2112,6 +2149,15 @@ function openThreadModal(row) {
 function closeModal() {
   document.getElementById('modal-backdrop').classList.remove('show');
   document.body.classList.remove('modal-open');
+  // 优先定位重建后的同一张卡片；找不到再退回原元素
+  let target = null;
+  if (modalReturnSelector) {
+    try { target = document.querySelector(modalReturnSelector); } catch (e) { target = null; }
+  }
+  if (!target) target = modalReturnFocus;
+  if (target && typeof target.focus === 'function') target.focus();
+  modalReturnFocus = null;
+  modalReturnSelector = null;
 }
 
 // ===== Data load =====
@@ -2267,13 +2313,21 @@ function initScrollSpy() {
     const el = document.getElementById(id);
     if (el) sections.push({ link: a, el });
   });
-  function onScroll() {
+  let ticking = false;
+  function updateActive() {
+    ticking = false;
     if (sections.length === 0) return;
     let current = sections[0];
     const scrollY = window.scrollY + nav.offsetHeight + 20;
     for (const s of sections) { if (s.el.offsetTop <= scrollY) current = s; }
     links.forEach(a => a.classList.remove('active'));
     if (current) current.link.classList.add('active');
+  }
+  // 每帧最多执行一次，避免滚动事件高频触发样式写入
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(updateActive);
   }
   window.removeEventListener('scroll', onScroll);
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -2315,7 +2369,21 @@ document.getElementById('modal-close').addEventListener('click', closeModal);
 document.getElementById('modal-backdrop').addEventListener('click', (e) => {
   if (e.target === document.getElementById('modal-backdrop')) closeModal();
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', (e) => {
+  const backdrop = document.getElementById('modal-backdrop');
+  const isOpen = backdrop && backdrop.classList.contains('show');
+  if (e.key === 'Escape') { closeModal(); return; }
+  if (e.key !== 'Tab' || !isOpen) return;
+  // 弹窗打开时把 Tab 焦点约束在对话框内
+  const focusables = backdrop.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 
 function handleError(err) {
   const banner = document.getElementById('error-banner');
