@@ -195,7 +195,8 @@
   }
 
   .theme-toggle {
-    position: absolute;
+    /* 固定在视口，滚动时始终可点；滚动到顶部时视觉位置与原来一致 */
+    position: fixed;
     top: 18px;
     right: 18px;
     width: 34px;
@@ -208,7 +209,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
+    /* 高于吸顶导航(100)、低于弹窗(1000) */
+    z-index: 150;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.08);
     transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
       border-color var(--dur) var(--ease);
   }
@@ -459,7 +462,8 @@
     margin: 0 auto;
     display: flex;
     gap: 2px;
-    padding: 0 var(--s-lg);
+    /* 右侧留出悬浮主题按钮的宽度，避免导航项滑到按钮下方 */
+    padding: 0 64px 0 var(--s-lg);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -1232,10 +1236,9 @@
     backface-visibility: hidden;
   }
 
-  html:active-view-transition .nav {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
+  /* 注意：不要在转场期间关掉导航的 backdrop-filter。
+     视图转场时页面被冻结为快照，毛玻璃只在捕获时渲染一次，并无逐帧开销；
+     若此刻禁用，新快照里的导航会失去模糊，88% 半透明底会把后面的字透出来。 */
   html:active-view-transition body {
     transition: none;
   }
@@ -1699,7 +1702,9 @@ async function loadWeather() {
   });
 
   const { lat, lon } = CITIES[city];
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&forecast_days=1`;
+  // 必须带 timezone：否则接口返回 UTC，而 "2026-11-08T17:00" 这种无时区后缀的
+  // 字符串会被 JS 当成本地时间解析，最终把 UTC 时间当北京时间显示（差 8 小时）。
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&forecast_days=1&timezone=Asia%2FShanghai`;
   try {
     const data = await fetchJSON(url);
     const cur = data.current || {};
@@ -1717,9 +1722,10 @@ async function loadWeather() {
           <div class="weather-meta">湿度 ${humidity}% · 风速 ${wind} km/h</div>
         </div>
       </div>`;
-    const u = new Date(new Date(cur.time || new Date()).getTime() + 8 * 3600000);
+    // 接口已按 Asia/Shanghai 返回本地时间，直接用本地方法读取，不要再手动加 8 小时
+    const u = cur.time ? new Date(cur.time) : new Date();
     document.getElementById('weather-update').textContent =
-      `更新于 ${u.getUTCMonth()+1}/${u.getUTCDate()} ${String(u.getUTCHours()).padStart(2,'0')}:${String(u.getUTCMinutes()).padStart(2,'0')}`;
+      `更新于 ${u.getMonth()+1}/${u.getDate()} ${String(u.getHours()).padStart(2,'0')}:${String(u.getMinutes()).padStart(2,'0')}`;
   } catch (err) {
     document.getElementById('weather-body').innerHTML = `<div class="weather-loading">天气加载失败：${err.message || '未知错误'}</div>`;
   }
