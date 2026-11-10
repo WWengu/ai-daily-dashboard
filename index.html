@@ -4,6 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI 日报 · 周报 · 月报</title>
+<script>
+/* 首次绘制前定好主题，避免深色用户刷新时先闪一帧白底（FOWT）。
+   仅读取主脚本写入的值（JSON 字符串，形如 "dark"），不写任何状态。 */
+(function () {
+  var t = 'light';
+  try {
+    var raw = localStorage.getItem('ai-daily-theme');
+    var stored = null;
+    try { stored = raw ? JSON.parse(raw) : null; } catch (e) {}
+    if (stored === 'light' || stored === 'dark') {
+      t = stored;
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      t = 'dark';
+    }
+  } catch (e) {}
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 <style>
   /* ============================================================
      Vercel design system
@@ -13,6 +31,9 @@
      ============================================================ */
 
   :root {
+    /* 让原生 UI（滚动条、表单控件、选中色）跟随主题 */
+    color-scheme: light;
+
     /* Surface ladder */
     --canvas: #ffffff;
     --canvas-soft: #fafafa;
@@ -66,6 +87,8 @@
   }
 
   [data-theme="dark"] {
+    color-scheme: dark;
+
     /* 层级必须正向：页面最暗 < 卡片 < 内嵌块 */
     --canvas: #111111;
     --canvas-soft: #000000;
@@ -134,13 +157,12 @@
   .icon-xl { width: 1.6em; height: 1.6em; }
   .icon-solid { fill: currentColor; stroke: none; }
 
-  /* ===== Hero — light band with mesh-gradient atmosphere ===== */
+  /* ===== Hero — 左对齐，标题区与天气卡两栏 ===== */
   .hero {
     position: relative;
     background: var(--canvas);
     border-bottom: 1px solid var(--hairline);
     padding: var(--s-4xl) var(--s-lg) var(--s-3xl);
-    text-align: center;
     overflow: hidden;
   }
 
@@ -149,43 +171,66 @@
   .hero-content {
     position: relative;
     z-index: 1;
-    max-width: 760px;
+    max-width: 1200px;
     margin: 0 auto;
+    text-align: left;
   }
 
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: var(--r-full);
-    border: 1px solid var(--hairline);
-    background: var(--canvas);
-    color: var(--body);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: var(--s-lg);
+  /* 左：标题 / 日期 / 总数；右：天气卡 */
+  .hero-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: var(--s-2xl);
+    /* 拉伸而非顶对齐：天气卡高度与左栏一致，右边缘不留参差空白 */
+    align-items: stretch;
   }
+
+  .hero-lead {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero-count {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    /* 沉到左栏底部，与天气卡下缘齐平；padding-top 保证最小间距 */
+    margin-top: auto;
+    padding-top: 18px;
+  }
+
+  /* 数据来源并入标题下方的信息行，不再作为标题上方的小标签 */
+  .hero-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .hero-source {
+    font-size: 12px;
+    color: var(--mute);
+    font-family: var(--font-mono);
+  }
+  .hero-source::before { content: '·'; margin-right: 8px; }
 
   .hero h1 {
-    font-size: 48px;
+    font-size: 40px;
     font-weight: 600;
     line-height: 1.15;
     letter-spacing: -0.02em;
     color: var(--ink);
-    margin-bottom: var(--s-md);
+    margin-bottom: 10px;
   }
 
   .hero .date-range {
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 400;
     line-height: 1.7;
     letter-spacing: 0;
     color: var(--body);
-    margin-bottom: var(--s-xl);
+    margin-bottom: 0;
     font-variant-numeric: tabular-nums;
   }
 
@@ -217,6 +262,28 @@
   }
   .theme-toggle:hover { background: var(--canvas-soft-2); color: var(--ink); border-color: var(--hairline-strong); }
 
+  /* 两个图标叠放：淡入淡出 + 旋转缩放交换，取代瞬间替换 innerHTML */
+  .tt-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  /* 默认即浅色态：月亮在场，太阳缩到背后 */
+  .tt-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+  .tt-sun { opacity: 0; transform: rotate(-115deg) scale(0.6); }
+
+  .theme-toggle[data-state="dark"] .tt-moon { opacity: 0; transform: rotate(115deg) scale(0.6); }
+  .theme-toggle[data-state="dark"] .tt-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+
+  /* 初始化完成后再启用过渡，避免首帧就播一遍。
+     时长偏长是有意的：图标在扩散过半（~340ms）就启动，但那之后仍在
+     快照遮盖下，只有揭开（680ms）后的尾段可见——时长不够就会看着像瞬间跳变。 */
+  .theme-toggle.tt-ready .tt-icon {
+    transition: opacity 500ms var(--ease),
+      transform 620ms cubic-bezier(0.34, 1.28, 0.64, 1);
+  }
+
   /* ===== Weather ===== */
   .weather {
     background: var(--canvas);
@@ -224,8 +291,6 @@
     border-radius: var(--r-lg);
     box-shadow: var(--e2);
     padding: 18px 20px;
-    margin: 0 auto var(--s-xl);
-    max-width: 560px;
     text-align: left;
   }
 
@@ -316,27 +381,25 @@
   }
 
   .hero .total {
-    font-size: 44px;
+    font-size: 30px;
     font-weight: 600;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
+    letter-spacing: -0.02em;
+    line-height: 1;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
 
   .hero .total-label {
-    font-size: 12px;
-    letter-spacing: 0.04em;
+    font-size: 13px;
+    letter-spacing: 0;
     color: var(--mute);
-    margin-top: 4px;
-    font-family: var(--font-mono);
   }
 
   .stats-bar {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
-    margin-top: var(--s-lg);
+    margin-top: var(--s-2xl);
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
     padding: var(--s-md) 0;
@@ -344,10 +407,10 @@
 
   .stat-item {
     padding: 0 var(--s-lg);
-    text-align: center;
+    text-align: left;
     border-left: 1px solid var(--hairline);
   }
-  .stat-item:first-child { border-left: none; }
+  .stat-item:first-child { border-left: none; padding-left: 0; }
 
   .stat-item .stat-num {
     font-size: 20px;
@@ -1267,10 +1330,14 @@
 
   @media (max-width: 768px) {
     .hero { padding: var(--s-3xl) var(--s-md) var(--s-xl); }
-    .hero::before { height: 340px; top: -120px; }
+    /* 窄屏单栏：天气卡落到标题下方 */
+    .hero-main { grid-template-columns: 1fr; gap: var(--s-lg); }
     .hero h1 { font-size: 34px; letter-spacing: -0.02em; }
-    .hero .total { font-size: 34px; }
+    .hero .total { font-size: 26px; }
     .hero .date-range { font-size: 15px; }
+    /* 换行时改用间距分隔：避免第二行首项因左内距而缩进，也避免竖线出现在行首 */
+    .stats-bar { margin-top: var(--s-xl); gap: var(--s-lg); row-gap: var(--s-md); }
+    .stat-item { padding: 0; border-left: none; }
     .reports { padding: var(--s-lg) var(--s-md) 0; }
     /* 移动端关闭毛玻璃：滚动时每帧重新合成，是主要卡顿源 */
     .nav {
@@ -1302,9 +1369,8 @@
   @media (max-width: 480px) {
     .hero { padding: 36px 14px 22px; }
     .hero h1 { font-size: 28px; }
-    .hero .total { font-size: 30px; }
+    .hero .total { font-size: 24px; }
     .stats-bar { padding: var(--s-sm) 0; }
-    .stat-item { padding: 0 12px; }
     .stat-item .stat-num { font-size: 17px; }
     .stat-item .stat-label { font-size: 11px; }
     .card { padding: 16px; }
@@ -1326,18 +1392,30 @@
 
 <!-- Hero -->
 <div class="hero">
-  <button class="theme-toggle" id="theme-toggle" aria-label="切换深色模式" title="切换深色/浅色"></button>
+  <button class="theme-toggle" id="theme-toggle" aria-label="切换深色模式" title="切换深色/浅色">
+    <span class="tt-icon tt-moon" data-icon="moon"></span>
+    <span class="tt-icon tt-sun" data-icon="sun"></span>
+  </button>
   <div class="hero-content">
-    <div class="hero-badge" id="hero-badge">AIHOT 每日精选</div>
-    <h1 id="hero-title">AI 日报</h1>
-    <div class="date-range loading-text" id="hero-date">正在拉取数据...</div>
+    <div class="hero-main">
+      <div class="hero-lead">
+        <h1 id="hero-title">AI 日报</h1>
+        <div class="hero-meta">
+          <span class="date-range loading-text" id="hero-date">正在拉取数据...</span>
+          <span class="hero-source" id="hero-badge">AIHOT 每日精选</span>
+        </div>
 
-    <div class="weather" id="weather">
-      <div class="weather-loading">正在加载天气...</div>
+        <div class="hero-count">
+          <span class="total" id="hero-total">—</span>
+          <span class="total-label" id="hero-total-label">条精选资讯</span>
+        </div>
+      </div>
+
+      <div class="weather" id="weather">
+        <div class="weather-loading">正在加载天气...</div>
+      </div>
     </div>
 
-    <div class="total" id="hero-total">—</div>
-    <div class="total-label" id="hero-total-label">条精选资讯</div>
     <div class="stats-bar" id="hero-stats"></div>
   </div>
 </div>
@@ -1474,7 +1552,12 @@ const LS_FAV = 'ai-daily-fav';
 const LS_READ = 'ai-daily-read';
 const LS_VIEW = 'ai-daily-view';
 
-let theme = LS.get(LS_THEME, 'light');
+// 首次访问（无存储值）跟随系统偏好；有存储值则以用户的选择为准
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+const storedTheme = LS.get(LS_THEME, null);
+let theme = (storedTheme === 'light' || storedTheme === 'dark')
+  ? storedTheme
+  : (prefersDark.matches ? 'dark' : 'light');
 let favorites = new Set(LS.get(LS_FAV, []));
 let read = new Set(LS.get(LS_READ, []));
 let searchQuery = '';
@@ -1526,8 +1609,13 @@ function markRead(k) {
 
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', theme);
+}
+
+// 图标状态单独同步：转场期间保持旧图标（与静态快照一致，交接不跳变），
+// 转场结束后再切换，动画才看得见。
+function syncIcon() {
   const btn = document.getElementById('theme-toggle');
-  if (btn) btn.innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
+  if (btn) btn.setAttribute('data-state', theme);
 }
 let themeSwitching = false;
 
@@ -1546,6 +1634,7 @@ function toggleTheme() {
   // 不支持 View Transitions / 用户偏好减少动效 / 上一次转场未结束 → 直接切换
   if (!document.startViewTransition || reduceMotion || themeSwitching) {
     commit();
+    syncIcon();
     return;
   }
 
@@ -1560,6 +1649,7 @@ function toggleTheme() {
     Math.max(oy, window.innerHeight - oy)
   );
 
+  const REVEAL_MS = 680;
   themeSwitching = true;
   try {
     const vt = document.startViewTransition(commit);
@@ -1574,16 +1664,22 @@ function toggleTheme() {
         {
           // 时长放慢、曲线回到两端平缓的分布：
           // 扩散边界匀速可追踪，比快起慢收更"顺"（后者只是显快）
-          duration: 680,
+          duration: REVEAL_MS,
           easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
           pseudoElement: '::view-transition-new(root)',
         }
       );
+      // 扩散过半就开始换图标，不必等整页铺满。
+      // 此刻按钮仍在快照遮盖下、前半段不可见，但与图标过渡时长配合后，
+      // 快照揭开时正处在中段，衔接自然。
+      setTimeout(syncIcon, Math.round(REVEAL_MS / 2));
     }).catch(() => {});
-    vt.finished.catch(() => {}).finally(() => { themeSwitching = false; });
+    // 兜底：转场异常或提前结束时保证图标最终正确（重复设置是幂等的）
+    vt.finished.catch(() => {}).finally(() => { syncIcon(); themeSwitching = false; });
   } catch (e) {
     themeSwitching = false;
     commit();
+    syncIcon();
   }
 }
 
@@ -2399,9 +2495,30 @@ function handleError(err) {
   document.getElementById('hero-date').classList.remove('loading-text');
 }
 
+// 从未手动选择过主题时，跟随系统偏好的实时变化。
+// 注意：MediaQueryList 的 addEventListener 在 Safari < 14 不存在（只有 addListener），
+// 且整个页面脚本是一个 IIFE —— 这里若抛错会连带数据加载一起挂掉，所以必须容错。
+function onSystemThemeChange(e) {
+  if (localStorage.getItem(LS_THEME)) return; // 已手动选择，不覆盖用户意图
+  theme = e.matches ? 'dark' : 'light';
+  applyTheme();
+  syncIcon();
+}
+try {
+  if (typeof prefersDark.addEventListener === 'function') {
+    prefersDark.addEventListener('change', onSystemThemeChange);
+  } else if (typeof prefersDark.addListener === 'function') {
+    prefersDark.addListener(onSystemThemeChange);
+  }
+} catch (e) {}
+
 // ===== Init =====
 hydrateIcons();
 applyTheme();
+syncIcon();
+// 首帧图标设好之后再开启过渡，否则加载瞬间会播一遍切换动画
+const ttBtn0 = document.getElementById('theme-toggle');
+if (ttBtn0) ttBtn0.classList.add('tt-ready');
 loadWeather();
 loadView(view).catch(handleError);
 
