@@ -311,7 +311,6 @@
   }
 
   .weather-city {
-    position: relative;
     font-size: 13px;
     font-weight: 500;
     color: var(--ink);
@@ -320,49 +319,89 @@
     gap: 6px;
   }
 
-  .weather-city select {
-    appearance: none;
-    -webkit-appearance: none;
-    background: var(--canvas);
-    color: var(--ink);
+  /* 自绘城市下拉：原生 select 展开后的列表由系统绘制，颜色与形态都无法跟随
+     页面主题（深色模式下会弹出系统样式），因此整体自己实现。 */
+  .city-picker { position: relative; }
+
+  .city-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 26px;
+    padding: 0 8px 0 10px;
     border: 1px solid var(--hairline);
     border-radius: var(--r-sm);
-    /* 右侧留出自绘箭头的位置 */
-    padding: 5px 26px 5px 10px;
+    background: var(--canvas);
+    color: var(--ink);
     font-size: 12px;
     font-family: var(--font-sans);
     cursor: pointer;
     transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
   }
-  .weather-city select:hover { border-color: var(--hairline-strong); }
-  /* 不能只写 outline: none —— 会把键盘焦点提示一起关掉 */
-  .weather-city select:focus-visible {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
-  }
-  /* 原生下拉列表可着色的部分：深色模式下不再弹出白底黑字 */
-  .weather-city select option {
-    background: var(--canvas);
-    color: var(--ink);
-  }
+  .city-trigger:hover { border-color: var(--hairline-strong); }
+  .city-trigger[aria-expanded="true"] { border-color: var(--ink); }
+  .city-trigger:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
-  /* 自绘 chevron：原生箭头由系统绘制，与控制台风格不一致 */
-  .weather-city::after {
-    content: '';
-    position: absolute;
-    right: 10px;
-    top: 50%;
+  .city-chevron {
     width: 6px;
     height: 6px;
-    /* 视觉居中：'v' 的笔画重心偏下，比几何居中再上提 1px */
-    margin-top: -6px;
+    margin-top: -3px;
     border-right: 1.5px solid var(--mute);
     border-bottom: 1.5px solid var(--mute);
     transform: rotate(45deg);
-    pointer-events: none;
-    transition: border-color var(--dur) var(--ease);
+    transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
   }
-  .weather-city:hover::after { border-color: var(--ink); }
+  .city-trigger:hover .city-chevron { border-color: var(--ink); }
+  /* 展开时箭头翻转向上，作为状态反馈 */
+  .city-trigger[aria-expanded="true"] .city-chevron {
+    margin-top: 3px;
+    transform: rotate(225deg);
+    border-color: var(--ink);
+  }
+
+  .city-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    z-index: 60;
+    min-width: 104px;
+    max-height: 264px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--canvas);
+    border-radius: var(--r-md);
+    box-shadow: var(--e5);
+  }
+  .city-menu[hidden] { display: none; }
+
+  .city-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 10px;
+    border-radius: var(--r-xs);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--body);
+    cursor: pointer;
+    white-space: nowrap;
+    outline: none;
+  }
+  .city-option.is-active { background: var(--canvas-soft-2); color: var(--ink); }
+  .city-option.is-selected { color: var(--ink); font-weight: 500; }
+  /* 勾选用两条边框绘制，避免引入字形图标 */
+  .city-option.is-selected::after {
+    content: '';
+    width: 7px;
+    height: 4px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
 
   .weather-update {
     font-size: 11px;
@@ -1809,24 +1848,109 @@ function getSavedCity() {
 }
 function saveCity(city) { try { localStorage.setItem(LS_KEY_CITY, city); } catch(e) {} }
 
+// 自绘城市下拉的交互：开关、键盘、焦点还原、点击外部关闭。
+// 原生 select 的弹层由系统绘制，无法跟随主题，所以列表也得自己画。
+function bindCityPicker() {
+  const picker = document.querySelector('.city-picker');
+  if (!picker) return;
+  const trigger = picker.querySelector('.city-trigger');
+  const menu = picker.querySelector('.city-menu');
+  const options = Array.from(menu.querySelectorAll('.city-option'));
+  if (!trigger || !menu || options.length === 0) return;
+
+  let active = Math.max(0, options.findIndex(o => o.getAttribute('aria-selected') === 'true'));
+
+  function highlight(i) {
+    active = Math.max(0, Math.min(i, options.length - 1));
+    options.forEach((o, k) => o.classList.toggle('is-active', k === active));
+  }
+  function open() {
+    menu.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    highlight(active);
+    options[active].focus();
+    options[active].scrollIntoView({ block: 'nearest' });
+  }
+  function close(returnFocus) {
+    if (menu.hidden) return;
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    if (returnFocus) trigger.focus();
+  }
+  function choose(i) {
+    const name = options[i] && options[i].dataset.city;
+    if (!name) return;
+    saveCity(name);
+    // 注意：loadWeather 会重建整块天气 DOM，旧 trigger 会被销毁，
+    // 所以不能先 close(true) 再渲染 —— 焦点要落在重建后的新节点上。
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    loadWeather();
+    const fresh = document.getElementById('city-trigger');
+    if (fresh) fresh.focus();
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (menu.hidden) open(); else close(false);
+  });
+  trigger.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+  });
+
+  options.forEach((opt, i) => {
+    opt.addEventListener('click', (e) => { e.stopPropagation(); choose(i); });
+    opt.addEventListener('mouseenter', () => highlight(i));
+  });
+
+  menu.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault(); highlight(active + 1);
+      options[active].focus(); options[active].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault(); highlight(active - 1);
+      options[active].focus(); options[active].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Home') {
+      e.preventDefault(); highlight(0); options[active].focus();
+    } else if (e.key === 'End') {
+      e.preventDefault(); highlight(options.length - 1); options[active].focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault(); choose(active);
+    } else if (e.key === 'Escape') {
+      e.preventDefault(); close(true);
+    } else if (e.key === 'Tab') {
+      close(false);
+    }
+  });
+}
+
 async function loadWeather() {
   const weatherEl = document.getElementById('weather');
   const city = getSavedCity();
-  let opts = '';
-  for (const name of Object.keys(CITIES)) {
-    opts += `<option value="${name}" ${name===city?'selected':''}>${name}</option>`;
-  }
+  const cityOptions = Object.keys(CITIES).map(name => {
+    const sel = name === city;
+    return `<li role="option" tabindex="-1" data-city="${name}" `
+      + `class="city-option${sel ? ' is-selected' : ''}" aria-selected="${sel}">${name}</li>`;
+  }).join('');
   weatherEl.innerHTML = `
     <div class="weather-head">
-      <div class="weather-city"><span class="icon" data-icon="pin" style="width:15px;height:15px"></span><select id="city-select">${opts}</select></div>
+      <div class="weather-city">
+        <span class="icon" data-icon="pin" style="width:15px;height:15px"></span>
+        <div class="city-picker">
+          <button type="button" class="city-trigger" id="city-trigger"
+                  aria-haspopup="listbox" aria-expanded="false" aria-controls="city-menu">
+            <span>${city}</span>
+            <span class="city-chevron" aria-hidden="true"></span>
+          </button>
+          <ul class="city-menu" id="city-menu" role="listbox" aria-label="选择城市" hidden>${cityOptions}</ul>
+        </div>
+      </div>
       <div class="weather-update" id="weather-update"></div>
     </div>
     <div id="weather-body"><div class="weather-loading">正在加载天气...</div></div>
   `;
   hydrateIcons(weatherEl);
-  document.getElementById('city-select').addEventListener('change', (e) => {
-    saveCity(e.target.value); loadWeather();
-  });
+  bindCityPicker();
 
   const { lat, lon } = CITIES[city];
   // 必须带 timezone：否则接口返回 UTC，而 "2026-11-08T17:00" 这种无时区后缀的
@@ -2542,6 +2666,18 @@ try {
     prefersDark.addListener(onSystemThemeChange);
   }
 } catch (e) {}
+
+// 点击城市下拉以外的地方收起列表（只注册一次，避免重渲染时累积监听）
+document.addEventListener('click', (e) => {
+  const picker = document.querySelector('.city-picker');
+  if (picker && picker.contains(e.target)) return;
+  const menu = document.getElementById('city-menu');
+  if (menu && !menu.hidden) {
+    menu.hidden = true;
+    const trg = document.getElementById('city-trigger');
+    if (trg) trg.setAttribute('aria-expanded', 'false');
+  }
+});
 
 // ===== Init =====
 hydrateIcons();
