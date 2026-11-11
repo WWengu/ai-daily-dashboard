@@ -153,6 +153,21 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+  /* 控件不参与文本选择：Windows 下点击/双击控件会选中其文字，
+     视觉上像变成了输入框。纯展示内容（标题、日期、摘要）保持可选中。 */
+  .theme-toggle,
+  .report-card,
+  .city-trigger,
+  .city-option,
+  .filter-chip,
+  .card-fav,
+  .modal-close,
+  .modal-cta,
+  .nav a {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   .icon-lg { width: 1.25em; height: 1.25em; }
   .icon-xl { width: 1.6em; height: 1.6em; }
   .icon-solid { fill: currentColor; stroke: none; }
