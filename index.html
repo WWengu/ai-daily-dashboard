@@ -311,6 +311,7 @@
   }
 
   .weather-city {
+    position: relative;
     font-size: 13px;
     font-weight: 500;
     color: var(--ink);
@@ -320,18 +321,48 @@
   }
 
   .weather-city select {
+    appearance: none;
+    -webkit-appearance: none;
     background: var(--canvas);
     color: var(--ink);
     border: 1px solid var(--hairline);
     border-radius: var(--r-sm);
-    padding: 4px 8px;
+    /* 右侧留出自绘箭头的位置 */
+    padding: 5px 26px 5px 10px;
     font-size: 12px;
     font-family: var(--font-sans);
     cursor: pointer;
-    outline: none;
-    transition: border-color var(--dur) var(--ease);
+    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
   }
   .weather-city select:hover { border-color: var(--hairline-strong); }
+  /* 不能只写 outline: none —— 会把键盘焦点提示一起关掉 */
+  .weather-city select:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+  /* 原生下拉列表可着色的部分：深色模式下不再弹出白底黑字 */
+  .weather-city select option {
+    background: var(--canvas);
+    color: var(--ink);
+  }
+
+  /* 自绘 chevron：原生箭头由系统绘制，与控制台风格不一致 */
+  .weather-city::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    /* 视觉居中：'v' 的笔画重心偏下，比几何居中再上提 1px */
+    margin-top: -6px;
+    border-right: 1.5px solid var(--mute);
+    border-bottom: 1.5px solid var(--mute);
+    transform: rotate(45deg);
+    pointer-events: none;
+    transition: border-color var(--dur) var(--ease);
+  }
+  .weather-city:hover::after { border-color: var(--ink); }
 
   .weather-update {
     font-size: 11px;
