@@ -1667,6 +1667,7 @@ const CITIES = {
 };
 const DEFAULT_CITY = '广州';
 const LS_KEY_CITY = 'ai-daily-city';
+const LS_WEATHER_SRC = 'ai-daily-weather-src'; // 记录上次成功的天气源，避免每次先等超时
 
 // ===== Helpers =====
 // 把 [data-icon="xxx"] 占位替换成 ICONS 里的 SVG。可重复调用（已注入的跳过）。
@@ -1822,10 +1823,16 @@ function truncate(str, max) {
   return str.length > max ? str.slice(0, max).replace(/\s+$/,'') + '...' : str;
 }
 
-async function fetchJSON(url) {
+async function fetchJSON(url, timeoutMs) {
   // 不设置 User-Agent：浏览器无法可靠设置该头，且会触发 CORS 预检；
   // AIHOT 的 Access-Control-Allow-Headers 不含 user-agent，预检会被拒。
-  const resp = await fetch(url);
+  //
+  // 超时是必须的：网络层被拦截时 TCP 能连上但服务端不响应，fetch 会一直挂着，
+  // 既不 resolve 也不 reject，界面就永久停在「正在加载」。
+  const init = (timeoutMs && typeof AbortSignal !== 'undefined' && AbortSignal.timeout)
+    ? { signal: AbortSignal.timeout(timeoutMs) }
+    : undefined;
+  const resp = await fetch(url, init);
   if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
   return resp.json();
 }
@@ -1939,6 +1946,67 @@ function bindCityPicker() {
   });
 }
 
+// ===== 天气数据源 =====
+// 主源 Open-Meteo 精度好、字段全；但部分网络到 api.open-meteo.com 的 HTTPS 会被
+// 卡住（TCP 能连、服务端不响应），此时降级到 wttr.in（CORS 开放、无需 key）。
+// 记住上次成功的源，避免每次都要先等一次超时。
+const WWO_TO_WMO = {
+  113: 0, 116: 2, 119: 3, 122: 3,
+  143: 45, 248: 45, 260: 45,
+  176: 61, 293: 61, 296: 61, 353: 80, 356: 81, 359: 82,
+  299: 63, 302: 63, 305: 65, 308: 65,
+  263: 51, 266: 53, 281: 56, 284: 57, 185: 56,
+  311: 66, 314: 67, 182: 66,
+  179: 71, 317: 71, 320: 71, 323: 71, 326: 71, 329: 73, 332: 73,
+  227: 75, 230: 75, 335: 75, 338: 75,
+  350: 77, 374: 77, 377: 77,
+  362: 85, 365: 85, 368: 85, 371: 86,
+  200: 95, 386: 95, 389: 95, 392: 95, 395: 95,
+};
+
+// wttr.in 的 observation_time 是 UTC 的 "HH:MM AM/PM"，
+// 转成不带时区后缀的本地时间字符串，交给下游 new Date() 解析，
+// 与 Open-Meteo 带了 timezone 参数后的返回形态保持一致。
+function wttrObsToLocalISO(raw) {
+  const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(raw || '').trim());
+  if (!m) return '';
+  let h = parseInt(m[1], 10) % 12;
+  if (/pm/i.test(m[3])) h += 12;
+  const now = new Date();
+  const utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), h, parseInt(m[2], 10));
+  const bj = new Date(utc + 8 * 3600000);
+  const p = n => String(n).padStart(2, '0');
+  return `${bj.getUTCFullYear()}-${p(bj.getUTCMonth() + 1)}-${p(bj.getUTCDate())}T${p(bj.getUTCHours())}:${p(bj.getUTCMinutes())}`;
+}
+
+async function fetchWeatherOpenMeteo(lat, lon, timeoutMs) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    + `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,`
+    + `wind_speed_10m,wind_direction_10m&forecast_days=1&timezone=Asia%2FShanghai`;
+  const data = await fetchJSON(url, timeoutMs);
+  const cur = data && data.current;
+  if (!cur) throw new Error('返回结构异常');
+  return cur;
+}
+
+async function fetchWeatherWttr(lat, lon, timeoutMs) {
+  const data = await fetchJSON(`https://wttr.in/${lat},${lon}?format=j1`, timeoutMs);
+  const c = data && data.current_condition && data.current_condition[0];
+  if (!c) throw new Error('返回结构异常');
+  const temp = Number(c.temp_C);
+  if (!isFinite(temp)) throw new Error('温度字段异常');
+  const feels = Number(c.FeelsLikeC);
+  return {
+    weather_code: Object.prototype.hasOwnProperty.call(WWO_TO_WMO, Number(c.weatherCode))
+      ? WWO_TO_WMO[Number(c.weatherCode)] : 3,
+    temperature_2m: temp,
+    apparent_temperature: isFinite(feels) ? feels : temp,
+    relative_humidity_2m: Number(c.humidity),
+    wind_speed_10m: Number(c.windspeedKmph),
+    time: wttrObsToLocalISO(c.observation_time),
+  };
+}
+
 async function loadWeather() {
   const weatherEl = document.getElementById('weather');
   const city = getSavedCity();
@@ -1968,33 +2036,49 @@ async function loadWeather() {
   bindCityPicker();
 
   const { lat, lon } = CITIES[city];
-  // 必须带 timezone：否则接口返回 UTC，而 "2026-11-08T17:00" 这种无时区后缀的
-  // 字符串会被 JS 当成本地时间解析，最终把 UTC 时间当北京时间显示（差 8 小时）。
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&forecast_days=1&timezone=Asia%2FShanghai`;
-  try {
-    const data = await fetchJSON(url);
-    const cur = data.current || {};
-    const [icon, desc] = weatherInfo(cur.weather_code);
-    const temp = Math.round(cur.temperature_2m);
-    const feels = Math.round(cur.apparent_temperature);
-    const humidity = cur.relative_humidity_2m;
-    const wind = Math.round(cur.wind_speed_10m);
-    document.getElementById('weather-body').innerHTML = `
-      <div class="weather-now">
-        <div class="weather-icon">${icon}</div>
-        <div style="flex:1;min-width:0">
-          <div class="weather-temp">${temp}°C</div>
-          <div class="weather-desc">${desc} · 体感 ${feels}°C</div>
-          <div class="weather-meta">湿度 ${humidity}% · 风速 ${wind} km/h</div>
-        </div>
-      </div>`;
-    // 接口已按 Asia/Shanghai 返回本地时间，直接用本地方法读取，不要再手动加 8 小时
-    const u = cur.time ? new Date(cur.time) : new Date();
-    document.getElementById('weather-update').textContent =
-      `更新于 ${u.getMonth()+1}/${u.getDate()} ${String(u.getHours()).padStart(2,'0')}:${String(u.getMinutes()).padStart(2,'0')}`;
-  } catch (err) {
-    document.getElementById('weather-body').innerHTML = `<div class="weather-loading">天气加载失败：${err.message || '未知错误'}</div>`;
+
+  // 主备依次尝试：上次成功的源排在最前，避免每次都为被拦截的源白等一次超时
+  const preferFallback = localStorage.getItem(LS_WEATHER_SRC) === 'wttr';
+  const attempts = preferFallback
+    ? [['wttr', () => fetchWeatherWttr(lat, lon, 9000)],
+       ['open-meteo', () => fetchWeatherOpenMeteo(lat, lon, 4000)]]
+    : [['open-meteo', () => fetchWeatherOpenMeteo(lat, lon, 4000)],
+       ['wttr', () => fetchWeatherWttr(lat, lon, 9000)]];
+
+  let cur = null;
+  let usedSource = '';
+  let lastErr = null;
+  for (const [name, run] of attempts) {
+    try { cur = await run(); usedSource = name; break; }
+    catch (e) { lastErr = e; }
   }
+
+  const bodyEl = document.getElementById('weather-body');
+  if (!cur) {
+    bodyEl.innerHTML = `<div class="weather-loading">天气加载失败：`
+      + `${(lastErr && lastErr.message) || '网络不可达'}</div>`;
+    return;
+  }
+  try { localStorage.setItem(LS_WEATHER_SRC, usedSource === 'wttr' ? 'wttr' : 'om'); } catch (e) {}
+
+  const [icon, desc] = weatherInfo(cur.weather_code);
+  const temp = Math.round(cur.temperature_2m);
+  const feels = Math.round(cur.apparent_temperature);
+  const humidity = cur.relative_humidity_2m;
+  const wind = Math.round(cur.wind_speed_10m);
+  bodyEl.innerHTML = `
+    <div class="weather-now">
+      <div class="weather-icon">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="weather-temp">${temp}°C</div>
+        <div class="weather-desc">${desc} · 体感 ${feels}°C</div>
+        <div class="weather-meta">湿度 ${humidity}% · 风速 ${wind} km/h</div>
+      </div>
+    </div>`;
+  // 两个源都归一到「无时区后缀的本地时间字符串」，这里统一按本地读取
+  const u = cur.time ? new Date(cur.time) : new Date();
+  document.getElementById('weather-update').textContent =
+    `更新于 ${u.getMonth()+1}/${u.getDate()} ${String(u.getHours()).padStart(2,'0')}:${String(u.getMinutes()).padStart(2,'0')}`;
 }
 
 // ===== Views =====
