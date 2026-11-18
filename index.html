@@ -1307,6 +1307,55 @@
     transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
       border-color var(--dur) var(--ease);
   }
+  /* 导出是两条路径（本条 / 事件），用下拉菜单承载，底栏才不会堆四个按钮 */
+  button.modal-cta { font-family: inherit; cursor: pointer; }
+  .export-picker { position: relative; }
+  .export-chevron {
+    width: 5px;
+    height: 5px;
+    margin-top: -3px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform var(--dur) var(--ease);
+  }
+  .modal-cta[aria-expanded="true"] .export-chevron {
+    margin-top: 2px;
+    transform: rotate(225deg);
+  }
+
+  .export-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 6px);
+    z-index: 20;
+    min-width: 132px;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--canvas);
+    border-radius: var(--r-md);
+    box-shadow: var(--e5);
+  }
+  .export-menu[hidden] { display: none; }
+
+  .export-item {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: var(--r-xs);
+    background: transparent;
+    color: var(--body);
+    font-family: inherit;
+    font-size: 12px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .export-item:hover,
+  .export-item:focus-visible { background: var(--canvas-soft-2); color: var(--ink); }
+  .export-item[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
   .modal-cta .icon { width: 13px; height: 13px; }
   .modal-cta:hover { text-decoration: none; }
 
@@ -1582,6 +1631,17 @@
       <span class="modal-source" id="modal-source-detail"></span>
       <div class="modal-actions">
         <a class="modal-cta secondary" id="modal-cta-aihot" href="#" target="_blank" rel="noopener noreferrer">AIHOT 详情</a>
+        <div class="export-picker">
+          <button class="modal-cta secondary" id="modal-export" type="button"
+                  aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">
+            导出 Markdown
+            <span class="export-chevron" aria-hidden="true"></span>
+          </button>
+          <ul class="export-menu" id="export-menu" role="menu" aria-label="导出选项" hidden>
+            <li role="none"><button type="button" class="export-item" role="menuitem" data-kind="item">本条资讯</button></li>
+            <li role="none"><button type="button" class="export-item" role="menuitem" data-kind="story" id="export-story-item">事件综述</button></li>
+          </ul>
+        </div>
         <a class="modal-cta" id="modal-cta" href="#" target="_blank" rel="noopener noreferrer">查看原文 →</a>
       </div>
     </div>
@@ -2379,7 +2439,156 @@ function showModalShell() {
   if (closeBtn) closeBtn.focus();
 }
 
+// ===== 单条资讯导出 Markdown =====
+// AIHOT 没有「单条」的公开 markdown 端点：/api/v1/agent/stories 只认热点给出的
+// 来龙去脉地址，随便猜 item id 会 404。所以这里用弹窗已有的字段自行拼装。
+let currentEntry = null;
+
+function safeFileName(text) {
+  const base = String(text || '')
+    .replace(/[\\/:*?"<>|\r\n\t]/g, ' ')   // 文件系统不允许的字符
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+  return base || 'aihot-item';
+}
+
+function downloadText(filename, text) {
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportEntryMarkdown() {
+  if (!currentEntry || !currentEntry.item) return;
+  const item = currentEntry.item;
+  const links = item.links || {};
+  const source = item.source ? item.source.name : '';
+  const time = fmtTime(getTime(item));
+
+  // 摘要来源有三层：条目自带 → 事件接口拉到的综述 → 弹窗里已经渲染出来的文本
+  let summary = String(item.summary || '').trim();
+  if (!summary && currentEntry.exportExtra) {
+    const extra = currentEntry.exportExtra;
+    const chunks = [];
+    if (extra.latest) chunks.push(`**最新**：${extra.latest}`);
+    if (extra.digest) chunks.push(extra.digest);
+    summary = chunks.join('\n\n');
+  }
+  if (!summary) {
+    const el = document.getElementById('modal-summary');
+    if (el && el.className === 'modal-summary') summary = el.textContent.trim();
+  }
+  const attribution = (item.attribution && item.attribution.url) || links.aihot || 'https://aihot.news';
+
+  const meta = [];
+  if (source) meta.push(`- 来源：${source}`);
+  if (time) meta.push(`- 时间：${time}`);
+  if (links.aihot) meta.push(`- AIHOT：${links.aihot}`);
+  if (links.original) meta.push(`- 原文：${links.original}`);
+  if (links.story) meta.push(`- 来龙去脉：${links.story}`);
+
+  const parts = [`# ${item.title || '未命名'}`];
+  // 摘要可能是多段，逐行加引用前缀，避免破坏 markdown 引用块
+  if (summary) parts.push(summary.split('\n').map(l => `> ${l}`).join('\n'));
+  if (meta.length) parts.push(meta.join('\n'));
+  parts.push('---');
+  parts.push(`数据来源：[AIHOT](${attribution})`);
+
+  downloadText(`${safeFileName(item.title)}.md`, parts.join('\n\n') + '\n');
+}
+
+// 官方 agent markdown 是写给模型看的：带安全边界声明、不可信资料围栏、
+// 末尾还有「回答提示」。导出给人看时要剥掉这三段，但保留标题与出处。
+function stripAgentWrapper(md) {
+  let out = String(md || '');
+  out = out.replace(/^安全边界：.*$/gm, '');
+  out = out.replace(/^［AIHOT 不可信外部资料开始］\s*$/gm, '');
+  out = out.replace(/^［AIHOT 不可信外部资料结束］\s*$/gm, '');
+  const cut = out.indexOf('\n## 回答提示');
+  if (cut >= 0) out = out.slice(0, cut);
+  // 正文里的相关链接指向 agent 接口，换成公开事件页，给人看才有意义
+  out = out.replace(
+    /https:\/\/aihot\.news\/api\/v1\/agent\/stories\/([a-f0-9-]+)/gi,
+    'https://aihot.news/story/$1'
+  );
+  return out.replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+async function exportStoryMarkdown() {
+  if (!currentEntry || !currentEntry.item) return;
+  const storyUrl = (currentEntry.item.links || {}).story || '';
+  const m = storyUrl.match(/story\/([a-f0-9-]+)/i);
+  if (!m) return;
+
+  const item = document.getElementById('export-story-item');
+  const label = item ? item.textContent : '';
+  if (item) item.textContent = '正在获取…';
+  try {
+    const init = (typeof AbortSignal !== 'undefined' && AbortSignal.timeout)
+      ? { signal: AbortSignal.timeout(15000) } : undefined;
+    const resp = await fetch(`${API_BASE}/agent/stories/${m[1]}`, init);
+    if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+    const md = stripAgentWrapper(await resp.text());
+    // 文件名取官方标题（去掉「AIHOT 事件：」前缀），拿不到就退回条目标题
+    const h1 = (md.match(/^#\s+(.+)$/m) || [])[1] || '';
+    const title = h1.replace(/^AIHOT 事件：/, '').trim() || currentEntry.item.title;
+    downloadText(`${safeFileName(title)} - 事件综述.md`, md);
+  } catch (err) {
+    if (item) {
+      item.textContent = '获取失败，请重试';
+      setTimeout(() => { item.textContent = label; }, 2500);
+    }
+  } finally {
+    if (item && item.textContent === '正在获取…') item.textContent = label;
+  }
+}
+
+function closeExportMenu() {
+  const menu = document.getElementById('export-menu');
+  const btn = document.getElementById('modal-export');
+  if (menu && !menu.hidden) menu.hidden = true;
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+function bindExportMenu() {
+  const btn = document.getElementById('modal-export');
+  const menu = document.getElementById('export-menu');
+  if (!btn || !menu) return;
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = menu.hidden;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) {
+      const first = menu.querySelector('.export-item:not([disabled])');
+      if (first) first.focus();
+    }
+  });
+
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('.export-item');
+    if (!item || item.disabled) return;
+    e.stopPropagation();
+    closeExportMenu();
+    if (item.dataset.kind === 'story') exportStoryMarkdown();
+    else exportEntryMarkdown();
+  });
+
+  menu.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); closeExportMenu(); btn.focus(); }
+  });
+}
+
 function openModal(entry) {
+  currentEntry = entry;
   const item = entry.item;
   const time = fmtTime(getTime(item));
   const source = item.source ? item.source.name : '未知来源';
@@ -2414,6 +2623,8 @@ function openModal(entry) {
       }
       s.className = 'modal-summary';
       s.innerHTML = '';
+      // 存一份给导出用：这类条目本身没有 summary，正文是从事件接口来的
+      entry.exportExtra = { latest, digest };
       if (latest) {
         const latestEl = document.createElement('span');
         latestEl.className = 'modal-context-latest';
@@ -2436,6 +2647,12 @@ function openModal(entry) {
 
   const cta = document.getElementById('modal-cta');
   const ctaAihot = document.getElementById('modal-cta-aihot');
+  const storyItem = document.getElementById('export-story-item');
+  if (storyItem) {
+    storyItem.disabled = !storyPublicId;
+    storyItem.title = storyPublicId ? '' : '这条资讯没有关联的事件页';
+  }
+
   ctaAihot.style.display = ''; // 从日报概览弹窗切回时恢复
   if (aihotUrl) { ctaAihot.href = aihotUrl; ctaAihot.classList.remove('disabled'); }
   else { ctaAihot.removeAttribute('href'); ctaAihot.classList.add('disabled'); }
@@ -2503,6 +2720,7 @@ function openThreadModal(row) {
 }
 
 function closeModal() {
+  closeExportMenu();
   document.getElementById('modal-backdrop').classList.remove('show');
   document.body.classList.remove('modal-open');
   // 优先定位重建后的同一张卡片；找不到再退回原元素
@@ -2722,6 +2940,11 @@ document.getElementById('filter-chips').addEventListener('click', (e) => {
 });
 
 document.getElementById('modal-close').addEventListener('click', closeModal);
+bindExportMenu();
+document.addEventListener('click', (e) => {
+  const picker = document.querySelector('.export-picker');
+  if (!picker || !picker.contains(e.target)) closeExportMenu();
+});
 document.getElementById('modal-backdrop').addEventListener('click', (e) => {
   if (e.target === document.getElementById('modal-backdrop')) closeModal();
 });
